@@ -1,0 +1,77 @@
+# MonoGame-särskilda ignoreringar
+bin/
+obj/
+Content/bin/
+Content/obj/
+Thumbs.db
+*.userprefs
+*.suo
+*.user
+*.aps
+*.ds_store
+*.vshost.*
+*ReSharper*
+*TestResults
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]ogs/
+[Tt]est[Rr]esult*
+
+# Unity-särskilda ignoreringar
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+# Filändelser att ignorera
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.opendb
+*.VC.db
+*.vsp
+*.vspx
+*.psess
+*.vspd
+*.log
+
+# Ignorera alla .meta-filer i Unity
+*.meta
+
+# Filer skapade av VS Code
+.vscode/
+
+# OS-specifika filer
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Övriga filer och mappar som ofta ignoreras
+*.log
+*.tmp
+*.tmp_proj
+sysinfo.txt
+*.swp
+*.backup
+*.bak
+*.tmp
+*.tid
