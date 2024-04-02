@@ -76,3 +76,4 @@ sysinfo.txt
 *.tmp
 *.tid
 .vs/polyframework/FileContentIndex/d6606f14-418d-478f-85b6-9e628764ef15.vsidx
+.vs/
