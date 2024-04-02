@@ -1,4 +1,4 @@
-# MonoGame-särskilda ignoreringar
+# MonoGame-sï¿½rskilda ignoreringar
 bin/
 obj/
 Content/bin/
@@ -23,7 +23,7 @@ bld/
 [Ll]ogs/
 [Tt]est[Rr]esult*
 
-# Unity-särskilda ignoreringar
+# Unity-sï¿½rskilda ignoreringar
 [Ll]ibrary/
 [Tt]emp/
 [Oo]bj/
@@ -31,7 +31,7 @@ bld/
 [Bb]uilds/
 [Ll]ogs/
 [Mm]emoryCaptures/
-# Filändelser att ignorera
+# Filï¿½ndelser att ignorera
 *.csproj
 *.unityproj
 *.sln
@@ -65,7 +65,7 @@ bld/
 ehthumbs.db
 Thumbs.db
 
-# Övriga filer och mappar som ofta ignoreras
+# ï¿½vriga filer och mappar som ofta ignoreras
 *.log
 *.tmp
 *.tmp_proj
@@ -75,3 +75,4 @@ sysinfo.txt
 *.bak
 *.tmp
 *.tid
+.vs/polyframework/FileContentIndex/d6606f14-418d-478f-85b6-9e628764ef15.vsidx
