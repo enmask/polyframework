@@ -37,9 +37,10 @@ namespace polyframework
 
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
-
             base.Initialize();
+
+            // This is a top-down game, so turn off gravity
+            world.Gravity = new Vector2(0, 0);
         }
 
         protected override void LoadContent()
