@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System.Diagnostics;                 // For Debug.WriteLine
 
 namespace polyframework
 {
@@ -16,8 +17,13 @@ namespace polyframework
 
         public MinigameExampleTwoCars()
         {
-            Content.RootDirectory = "Content";
             IsMouseVisible = true;
+            // Don't use fullscreen when debugging, because drawing can stop working then
+            if (!Debugger.IsAttached)
+            {
+                _graphics.IsFullScreen = true;
+                _graphics.ApplyChanges();
+            }
         }
 
         protected override void Initialize()
