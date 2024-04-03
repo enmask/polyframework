@@ -4,14 +4,11 @@ using Microsoft.Xna.Framework.Input;
 
 namespace polyframework
 {
-    public class MinigameExampleTwoCars : Game
+    public class MinigameExampleTwoCars : Minigame_Base.MinigameBase
     {
-        private GraphicsDeviceManager _graphics;
-        private SpriteBatch _spriteBatch;
 
         public MinigameExampleTwoCars()
         {
-            _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
         }
