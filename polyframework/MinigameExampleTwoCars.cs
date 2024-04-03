@@ -14,6 +14,13 @@ namespace polyframework
         const string MINIGAME_NAME = "SmallGame";
         const string LEVEL_NAME = "Level1";
 
+        // Car settings constants
+        const string CAR_PICTURE_NAME = "graycar";
+
+        //
+        // Instance variables
+        //
+        Texture2D plrTex;
 
         public MinigameExampleTwoCars()
         {
@@ -37,7 +44,8 @@ namespace polyframework
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            // TODO: use this.Content to load your game content here
+            // Load the player texture
+            plrTex = Content.Load<Texture2D>(CAR_PICTURE_NAME);
         }
 
         protected override void Update(GameTime gameTime)
