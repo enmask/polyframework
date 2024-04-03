@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Diagnostics;                 // For Debug.WriteLine
+using System.IO;                          // For file handling
 
 namespace polyframework
 {
@@ -11,7 +12,7 @@ namespace polyframework
         // Constants
         //
         // Game constants
-        const string MINIGAME_NAME = "SmallGame";
+        const string MINIGAME_NAME = "TwoCars";
         const string LEVEL_NAME = "Level1";
 
         // Car settings constants
@@ -21,6 +22,7 @@ namespace polyframework
         // Instance variables
         //
         Texture2D plrTex;
+        SpriteFont font;
 
         public MinigameExampleTwoCars()
         {
@@ -45,7 +47,11 @@ namespace polyframework
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             // Load the player texture
-            plrTex = Content.Load<Texture2D>(CAR_PICTURE_NAME);
+            string carPicPath = Path.Combine(MINIGAME_NAME, CAR_PICTURE_NAME);
+            plrTex = Content.Load<Texture2D>(carPicPath);
+
+            // Load the font
+            font = Content.Load<SpriteFont>("font");
         }
 
         protected override void Update(GameTime gameTime)
