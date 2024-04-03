@@ -6,6 +6,13 @@ namespace polyframework
 {
     public class MinigameExampleTwoCars : Minigame_Base.MinigameBase
     {
+        //
+        // Constants
+        //
+        // Game constants
+        const string MINIGAME_NAME = "SmallGame";
+        const string LEVEL_NAME = "Level1";
+
 
         public MinigameExampleTwoCars()
         {
