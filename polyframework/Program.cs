@@ -1,3 +1,3 @@
 ﻿
-using var game = new polyframework.Game1();
+using var game = new polyframework.MinigameExampleTwoCars();
 game.Run();
