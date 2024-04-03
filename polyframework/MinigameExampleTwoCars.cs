@@ -22,6 +22,7 @@ namespace polyframework
         // Instance variables
         //
         Texture2D plrTex;
+        Thing plr1, plr2;
         SpriteFont font;
 
         public MinigameExampleTwoCars()
