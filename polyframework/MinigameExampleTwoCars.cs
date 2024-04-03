@@ -18,6 +18,13 @@ namespace polyframework
         // Car settings constants
         const string CAR_PICTURE_NAME = "graycar";
 
+        // Player settings constants. Positions are in meters, not pixels,
+        // and origin is bottom left corner of the game window.
+        readonly Vector2 PLR1_STARTPOS = new Vector2(5.2f, 0.8f);
+        readonly Vector2 PLR2_STARTPOS = new Vector2(5.2f, 1.6f);
+        readonly Color PLR1_COLOR = Color.Red;
+        readonly Color PLR2_COLOR = new Color(0, 255, 0, 255);
+
         //
         // Instance variables
         //
