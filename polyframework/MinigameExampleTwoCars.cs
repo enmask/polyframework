@@ -48,6 +48,10 @@ namespace polyframework
         {
             base.Initialize();
 
+            // Add red and green players
+            plr1 = AddPlayer(PLR1_COLOR, PLR1_STARTPOS);
+            plr2 = AddPlayer(PLR2_COLOR, PLR2_STARTPOS);
+
             // This is a top-down game, so turn off gravity
             world.Gravity = new Vector2(0, 0);
         }
@@ -68,8 +72,6 @@ namespace polyframework
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
-
-            // TODO: Add your update logic here
 
             base.Update(gameTime);
         }
