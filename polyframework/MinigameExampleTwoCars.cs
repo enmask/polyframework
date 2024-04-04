@@ -80,7 +80,18 @@ namespace polyframework
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            // TODO: Add your drawing code here
+            // We don't need to draw the things, because the base.Draw call takes care of that,
+            // but let's draw some text info.
+            _spriteBatch.Begin();
+            // Make a nice string...
+            string posStr = "Car 1 x: " + System.Math.Round(plr1.body.Position.X, 1) +
+                            "      y: " + System.Math.Round(plr1.body.Position.Y, 1);
+            // ... and draw the string.
+            _spriteBatch.DrawString(font, posStr, new Vector2(170, 135), Color.White);
+            _spriteBatch.End();
+
+            // This call takes care of drawing all the Thing:s
+
 
             base.Draw(gameTime);
         }
