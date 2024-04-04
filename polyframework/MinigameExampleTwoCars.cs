@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using nkast.Aether.Physics2D.Dynamics;
 using System.Diagnostics;                 // For Debug.WriteLine
 using System.IO;                          // For file handling
 
@@ -81,5 +82,25 @@ namespace polyframework
 
             base.Draw(gameTime);
         }
-    }
-}
+
+        Thing AddPlayer(Color plrColor, Vector2 plrStartPos)
+        {
+            Thing t = new Thing(world,
+                                plrTex,
+                                plrStartPos,
+                                BodyType.Dynamic,
+                                isVisible: true,
+                                drawTintRed: plrColor.R,
+                                drawTintGreen: plrColor.G,
+                                drawTintBlue: plrColor.B,
+                                drawTintAlpha: plrColor.A,
+                                originX: plrTex.Width / 2,
+                                originY: plrTex.Height / 2);
+
+            t.body.LinearDamping = 0.0f;
+            AddThing(t);
+            return t;
+        }
+    } // End of class MinigameExampleTwoCars
+} // End of namespace polyframework
+
