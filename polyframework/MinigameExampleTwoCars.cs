@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using nkast.Aether.Physics2D.Dynamics;
 using System.Diagnostics;                 // For Debug.WriteLine
 using System.IO;                          // For file handling
+using System.Collections.Generic;         // For lists
 
 namespace polyframework
 {
@@ -31,6 +32,7 @@ namespace polyframework
         //
         Texture2D plrTex;
         Thing plr1, plr2;
+        List<Thing> players;
         SpriteFont font;
 
         public MinigameExampleTwoCars()
@@ -51,6 +53,11 @@ namespace polyframework
             // Add red and green players
             plr1 = AddPlayer(PLR1_COLOR, PLR1_STARTPOS);
             plr2 = AddPlayer(PLR2_COLOR, PLR2_STARTPOS);
+
+            // It's nice to have a list of just the players, not all the things
+            players = new List<Thing>();
+            players.Add(plr1);
+            players.Add(plr2);
 
             // This is a top-down game, so turn off gravity
             world.Gravity = new Vector2(0, 0);
