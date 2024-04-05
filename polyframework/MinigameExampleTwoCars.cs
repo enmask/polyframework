@@ -80,6 +80,15 @@ namespace polyframework
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
+            if (Keyboard.GetState().IsKeyDown(Keys.Up))   // Player 1 accelerate
+            {
+                plr1.body.ApplyLinearImpulse(
+                    0.04f *
+                    new Vector2((float)System.Math.Cos(plr1.body.Rotation),
+                                (float)System.Math.Sin(plr1.body.Rotation))
+                );
+            }
+
             base.Update(gameTime);
         }
 
