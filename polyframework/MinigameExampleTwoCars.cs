@@ -88,6 +88,11 @@ namespace polyframework
                                 (float)System.Math.Sin(plr1.body.Rotation))
                 );
             }
+            if (Keyboard.GetState().IsKeyDown(Keys.Left))   // Player 1 turnleft
+                plr1.body.ApplyAngularImpulse(0.02f);
+
+            if (Keyboard.GetState().IsKeyDown(Keys.Right))  // Player 1 turnright
+                plr1.body.ApplyAngularImpulse(-0.02f);
 
             base.Update(gameTime);
         }
