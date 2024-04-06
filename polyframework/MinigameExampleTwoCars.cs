@@ -20,6 +20,8 @@ namespace polyframework
 
         // Car settings constants
         const string CAR_PICTURE_NAME = "graycar";
+        const float CAR_ACCELERATION = 0.04f;
+        const float CAR_TURN_POWER = 0.02f;
 
         // Player settings constants. Positions are in meters, not pixels,
         // and origin is bottom left corner of the game window.
@@ -111,16 +113,16 @@ namespace polyframework
             if (IsActionActive("accelerate", plr))
             {
                 plr.body.ApplyLinearImpulse(
-                    0.04f *
+                    CAR_ACCELERATION *
                     new Vector2((float)Cos(plr.body.Rotation),
                                 (float)Sin(plr.body.Rotation))
                 );
             }
             if (IsActionActive("turnleft", plr))
-                plr.body.ApplyAngularImpulse(0.02f);
+                plr.body.ApplyAngularImpulse(CAR_TURN_POWER);
 
             if (IsActionActive("turnright", plr))
-                plr.body.ApplyAngularImpulse(-0.02f);
+                plr.body.ApplyAngularImpulse(-CAR_TURN_POWER);
         }
 
 
