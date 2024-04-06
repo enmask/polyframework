@@ -112,11 +112,9 @@ namespace polyframework
         {
             if (IsActionActive("accelerate", plr))
             {
-                plr.body.ApplyLinearImpulse(
-                    CAR_ACCELERATION *
-                    new Vector2((float)Cos(plr.body.Rotation),
-                                (float)Sin(plr.body.Rotation))
-                );
+                Vector2 direction = new Vector2((float)Cos(plr.body.Rotation),
+                                                (float)Sin(plr.body.Rotation));
+                plr.body.ApplyLinearImpulse(CAR_ACCELERATION * direction);
             }
             if (IsActionActive("turnleft", plr))
                 plr.body.ApplyAngularImpulse(CAR_TURN_POWER);
@@ -124,7 +122,6 @@ namespace polyframework
             if (IsActionActive("turnright", plr))
                 plr.body.ApplyAngularImpulse(-CAR_TURN_POWER);
         }
-
 
         // Returns true if the action is active for a player
         bool IsActionActive(string action, Thing plr)
