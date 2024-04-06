@@ -5,6 +5,7 @@ using nkast.Aether.Physics2D.Dynamics;
 using System.Diagnostics;                 // For Debug.WriteLine
 using System.IO;                          // For file handling
 using System.Collections.Generic;         // For lists
+using static System.Math;                 // For sin and cos etc.
 
 namespace polyframework
 {
@@ -84,8 +85,8 @@ namespace polyframework
             {
                 plr1.body.ApplyLinearImpulse(
                     0.04f *
-                    new Vector2((float)System.Math.Cos(plr1.body.Rotation),
-                                (float)System.Math.Sin(plr1.body.Rotation))
+                    new Vector2((float)Cos(plr1.body.Rotation),
+                                (float)Sin(plr1.body.Rotation))
                 );
             }
             if (Keyboard.GetState().IsKeyDown(Keys.Left))   // Player 1 turnleft
@@ -98,8 +99,8 @@ namespace polyframework
             {
                 plr2.body.ApplyLinearImpulse(
                     0.04f *
-                    new Vector2((float)System.Math.Cos(plr2.body.Rotation),
-                                (float)System.Math.Sin(plr2.body.Rotation))
+                    new Vector2((float)Cos(plr2.body.Rotation),
+                                (float)Sin(plr2.body.Rotation))
                 );
             }
             if (Keyboard.GetState().IsKeyDown(Keys.A))   // Player 2 turnleft
@@ -119,8 +120,8 @@ namespace polyframework
             // but let's draw some text info.
             _spriteBatch.Begin();
             // Make a nice string...
-            string posStr = "Car 1 x: " + System.Math.Round(plr1.body.Position.X, 1) +
-                            "      y: " + System.Math.Round(plr1.body.Position.Y, 1);
+            string posStr = "Car 1 x: " + Round(plr1.body.Position.X, 1) +
+                            "      y: " + Round(plr1.body.Position.Y, 1);
             // ... and draw the string.
             _spriteBatch.DrawString(font, posStr, new Vector2(170, 135), Color.White);
             _spriteBatch.End();
