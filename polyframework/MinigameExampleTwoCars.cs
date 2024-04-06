@@ -81,7 +81,7 @@ namespace polyframework
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            if (Keyboard.GetState().IsKeyDown(Keys.Up))   // Player 1 accelerate
+            if (IsActionActive("accelerate", plr1))
             {
                 plr1.body.ApplyLinearImpulse(
                     0.04f *
@@ -89,13 +89,13 @@ namespace polyframework
                                 (float)Sin(plr1.body.Rotation))
                 );
             }
-            if (Keyboard.GetState().IsKeyDown(Keys.Left))   // Player 1 turnleft
+            if (IsActionActive("turnleft", plr1))
                 plr1.body.ApplyAngularImpulse(0.02f);
 
-            if (Keyboard.GetState().IsKeyDown(Keys.Right))  // Player 1 turnright
+            if (IsActionActive("turnright", plr1))
                 plr1.body.ApplyAngularImpulse(-0.02f);
 
-            if (Keyboard.GetState().IsKeyDown(Keys.W))   // Player 2 accelerate
+            if (IsActionActive("accelerate", plr2))
             {
                 plr2.body.ApplyLinearImpulse(
                     0.04f *
@@ -103,10 +103,10 @@ namespace polyframework
                                 (float)Sin(plr2.body.Rotation))
                 );
             }
-            if (Keyboard.GetState().IsKeyDown(Keys.A))   // Player 2 turnleft
+            if (IsActionActive("turnleft", plr2))
                 plr2.body.ApplyAngularImpulse(0.02f);
 
-            if (Keyboard.GetState().IsKeyDown(Keys.D))  // Player 2 turnright
+            if (IsActionActive("turnright", plr2))
                 plr2.body.ApplyAngularImpulse(-0.02f);
 
             base.Update(gameTime);
@@ -130,6 +130,55 @@ namespace polyframework
 
 
             base.Draw(gameTime);
+        }
+
+        // Returns true if the action is active for a player
+        bool IsActionActive(string action, Thing plr)
+        {
+            for (int plrIx = 0; plrIx < players.Count; plrIx++)
+            {
+                if (plr == players[plrIx])
+                {
+
+                    Debug.WriteLine("plr.id: " + plr.id + " action: " + action + "group: " + plr.group);
+
+
+                    switch (action)
+                    {
+                        case "accelerate":
+                            switch (plrIx)
+                            {
+                                case 0:
+                                    return Keyboard.GetState().IsKeyDown(Keys.Up);   // Player 1 accelerate
+                                case 1:
+                                    return Keyboard.GetState().IsKeyDown(Keys.W);    // Player 2 accelerate
+                                default:
+                                    return false;
+                            }
+                        case "turnleft":
+                            switch (plrIx)
+                            {
+                                case 0:
+                                    return Keyboard.GetState().IsKeyDown(Keys.Left); // Player 1 turnleft
+                                case 1:
+                                    return Keyboard.GetState().IsKeyDown(Keys.A);    // Player 2 turnleft
+                                default:
+                                    return false;
+                            }
+                        case "turnright":
+                            switch (plrIx)
+                            {
+                                case 0:
+                                    return Keyboard.GetState().IsKeyDown(Keys.Right); // Player 1 turnright
+                                case 1:
+                                    return Keyboard.GetState().IsKeyDown(Keys.D);    // Player 2 turnright
+                                default:
+                                    return false;
+                            }
+                    }
+                }
+            }
+            return false;
         }
 
         Thing AddPlayer(Color plrColor, Vector2 plrStartPos)
