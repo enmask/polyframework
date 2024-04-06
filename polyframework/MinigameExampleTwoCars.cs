@@ -81,33 +81,8 @@ namespace polyframework
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            if (IsActionActive("accelerate", plr1))
-            {
-                plr1.body.ApplyLinearImpulse(
-                    0.04f *
-                    new Vector2((float)Cos(plr1.body.Rotation),
-                                (float)Sin(plr1.body.Rotation))
-                );
-            }
-            if (IsActionActive("turnleft", plr1))
-                plr1.body.ApplyAngularImpulse(0.02f);
-
-            if (IsActionActive("turnright", plr1))
-                plr1.body.ApplyAngularImpulse(-0.02f);
-
-            if (IsActionActive("accelerate", plr2))
-            {
-                plr2.body.ApplyLinearImpulse(
-                    0.04f *
-                    new Vector2((float)Cos(plr2.body.Rotation),
-                                (float)Sin(plr2.body.Rotation))
-                );
-            }
-            if (IsActionActive("turnleft", plr2))
-                plr2.body.ApplyAngularImpulse(0.02f);
-
-            if (IsActionActive("turnright", plr2))
-                plr2.body.ApplyAngularImpulse(-0.02f);
+            ApplyUserInput(plr1);
+            ApplyUserInput(plr2);
 
             base.Update(gameTime);
         }
@@ -131,6 +106,25 @@ namespace polyframework
 
             base.Draw(gameTime);
         }
+
+
+        void ApplyUserInput(Thing plr)
+        {
+            if (IsActionActive("accelerate", plr))
+            {
+                plr.body.ApplyLinearImpulse(
+                    0.04f *
+                    new Vector2((float)Cos(plr.body.Rotation),
+                                (float)Sin(plr.body.Rotation))
+                );
+            }
+            if (IsActionActive("turnleft", plr))
+                plr.body.ApplyAngularImpulse(0.02f);
+
+            if (IsActionActive("turnright", plr))
+                plr.body.ApplyAngularImpulse(-0.02f);
+        }
+
 
         // Returns true if the action is active for a player
         bool IsActionActive(string action, Thing plr)
