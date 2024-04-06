@@ -81,8 +81,8 @@ namespace polyframework
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            ApplyUserInput(plr1);
-            ApplyUserInput(plr2);
+            foreach (Thing plr in players)
+                ApplyUserInput(plr);
 
             base.Update(gameTime);
         }
@@ -102,8 +102,6 @@ namespace polyframework
             _spriteBatch.End();
 
             // This call takes care of drawing all the Thing:s
-
-
             base.Draw(gameTime);
         }
 
