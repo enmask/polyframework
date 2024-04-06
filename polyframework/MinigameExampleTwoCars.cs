@@ -94,6 +94,20 @@ namespace polyframework
             if (Keyboard.GetState().IsKeyDown(Keys.Right))  // Player 1 turnright
                 plr1.body.ApplyAngularImpulse(-0.02f);
 
+            if (Keyboard.GetState().IsKeyDown(Keys.W))   // Player 2 accelerate
+            {
+                plr2.body.ApplyLinearImpulse(
+                    0.04f *
+                    new Vector2((float)System.Math.Cos(plr2.body.Rotation),
+                                (float)System.Math.Sin(plr2.body.Rotation))
+                );
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.A))   // Player 2 turnleft
+                plr2.body.ApplyAngularImpulse(0.02f);
+
+            if (Keyboard.GetState().IsKeyDown(Keys.D))  // Player 2 turnright
+                plr2.body.ApplyAngularImpulse(-0.02f);
+
             base.Update(gameTime);
         }
 
