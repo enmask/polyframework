@@ -127,14 +127,12 @@ namespace Minigame_Base
                 float midLine = 18.8f;
                 float distFromMidLine = thing.body.Position.X;
                 float forceToMiddle = distFromMidLine - midLine;
-                //Debug.WriteLine("x distFromMidLine: " + distFromMidLine + ", x forceToMiddle: " + forceToMiddle + ", x impulse: " + -forceToMiddle * HORIZONTAL_FORCE_TO_MIDDLE_FACTOR);
                 thing.body.ApplyLinearImpulse(new Vector2(-forceToMiddle * HORIZONTAL_FORCE_TO_MIDDLE_FACTOR, 0));
 
                 // Then vertical force
                 midLine = 8.0f;
                 distFromMidLine = thing.body.Position.Y;
                 forceToMiddle = distFromMidLine - midLine;
-                //Debug.WriteLine("y distFromMidLine: " + distFromMidLine + ", y forceToMiddle: " + forceToMiddle + ", y impulse: " + -forceToMiddle * VERTICAL_FORCE_TO_MIDDLE_FACTOR);
                 thing.body.ApplyLinearImpulse(new Vector2(0, -forceToMiddle * VERTICAL_FORCE_TO_MIDDLE_FACTOR));
             }
 
@@ -149,10 +147,6 @@ namespace Minigame_Base
 
         protected override void Draw(GameTime gameTime)
         {
-            //Debug.WriteLine("Base Draw called");
-
-            //GraphicsDevice.Clear(Color.CornflowerBlue);
-
             _spriteBatch.Begin();
 
             foreach (KeyValuePair<int, Thing> kvp in things)
@@ -163,13 +157,6 @@ namespace Minigame_Base
                     continue;
 
                 Vector2 scrPos = ToScrPos(thing.body.Position);
-
-                Debug.WriteLine("Draw: Thing: " + thing + ", scrPos: " + scrPos +
-                                ", thing.tex.Width: " + thing.tex.Width +
-                                ", thing.tex.Height: " + thing.tex.Height +
-                                ", thing.origin: " + thing.origin +
-                                ", thing.scale: " + thing.scale);
-
 
                 _spriteBatch.Draw(texture: thing.tex,
                                   position: scrPos,
@@ -432,23 +419,6 @@ namespace Minigame_Base
             return new Vector2(physX, physY);
         }
 
-        public void LogStones()
-        {
-            foreach (KeyValuePair<int, MinigameBase.Thing> kvp in things)
-            {
-                Thing thing = (Thing)kvp.Value;
-
-                Debug.WriteLine("LogStones: thing: " + thing +
-                                ", alpha: " + thing.drawTintAlpha +
-                                ", red: " + thing.drawTintRed +
-                                ", green: " + thing.drawTintGreen +
-                                ", blue: " + thing.drawTintBlue +
-                                ", pos: " + thing.body.Position +
-                                ", vel: " + thing.body.LinearVelocity);
-
-            }
-        }
-
         protected Core.Timer AddTimer()
         {
             var timer = new Core.Timer();
@@ -520,13 +490,6 @@ namespace Minigame_Base
                                               pos,
                                               rot,
                                               bodyType);
-
-                    Debug.WriteLine("Thing constructor: Rect pts: " +
-                                    "(" + (pos.X - tex.Width / SCALE / 2) + ", " + (pos.Y - tex.Height / SCALE / 2) + "), " +
-                                    "(" + (pos.X + tex.Width / SCALE / 2) + ", " + (pos.Y - tex.Height / SCALE / 2) + "), " +
-                                    "(" + (pos.X + tex.Width / SCALE / 2) + ", " + (pos.Y + tex.Height / SCALE / 2) + "), " +
-                                    "(" + (pos.X - tex.Width / SCALE / 2) + ", " + (pos.Y + tex.Height / SCALE / 2) + ")");
-
                 }
                 else if (bodyShape == BodyShape.Circle)
                 {

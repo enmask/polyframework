@@ -133,10 +133,6 @@ namespace polyframework
             {
                 if (plr == players[plrIx])
                 {
-
-                    Debug.WriteLine("plr.id: " + plr.id + " action: " + action + "group: " + plr.group);
-
-
                     switch (action)
                     {
                         case "accelerate":
