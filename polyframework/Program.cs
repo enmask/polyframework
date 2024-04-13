@@ -1,4 +1,6 @@
-﻿PolyNetworking.Networking.StartNetworking(true);  // TODO: Change to false for client
+﻿const bool isServer = true;  // TODO: Change to false for client
+
+PolyNetworking.Networking.StartNetworking(isServer);
 
 using var game = new polyframework.MinigameExampleTwoCars();
-game.Run();
+game.Run(isServer);

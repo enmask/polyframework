@@ -41,10 +41,10 @@ namespace Minigame_Base
         protected GraphicsDeviceManager _graphics;
         protected SpriteBatch _spriteBatch;
 
+        private bool isServer;
         protected World world;
 
         // The dictionaries of things in the game
-        //Dictionary<int, Player> plrs;
         public Dictionary<int, Thing> things;
         
         Dictionary<string, List<Shape>> colliderDict;
@@ -64,7 +64,15 @@ namespace Minigame_Base
             _graphics.PreferredBackBufferWidth = WINDOW_WIDTH;
             _graphics.PreferredBackBufferHeight = WINDOW_HEIGHT;
             _graphics.ApplyChanges();
-            }
+        }
+
+        public void Run(bool isServer)
+        {
+            Debug.WriteLine("MinigameBase Run called, isServer = " + isServer);
+            this.isServer = isServer;
+            base.Run();
+        }
+
 
         protected override void Initialize()
         {
