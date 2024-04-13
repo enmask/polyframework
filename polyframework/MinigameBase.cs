@@ -86,13 +86,6 @@ namespace Minigame_Base
             base.Initialize();
         }
 
-        /* MinigameBase probably won't need a LoadContent
-        protected override void LoadContent()
-        {
-            _spriteBatch = new SpriteBatch(GraphicsDevice);
-        }
-        */
-
         protected override void Update(GameTime gameTime)
         {            
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
@@ -157,26 +150,34 @@ namespace Minigame_Base
         {
             _spriteBatch.Begin();
 
-            foreach (KeyValuePair<int, Thing> kvp in things)
+            if (isServer)
             {
-                Thing thing = kvp.Value;
 
-                if (!thing.isVisible)
-                    continue;
+                foreach (KeyValuePair<int, Thing> kvp in things)
+                {
+                    Thing thing = kvp.Value;
 
-                Vector2 scrPos = ToScrPos(thing.body.Position);
+                    if (!thing.isVisible)
+                        continue;
 
-                _spriteBatch.Draw(texture: thing.tex,
-                                  position: scrPos,
-                                  sourceRectangle: new Rectangle(0, 0, thing.tex.Width, thing.tex.Height),
-                                  color: new Color(thing.drawTintRed, thing.drawTintGreen,
-                                                   thing.drawTintBlue, thing.drawTintAlpha) /*Color.White*/,
-                                  //rotation: 0.0f,
-                                  rotation: -thing.body.Rotation,
-                                  origin: thing.origin,
-                                  scale: thing.scale,
-                                  effects: SpriteEffects.None,
-                                  layerDepth: 0.0f);
+                    Vector2 scrPos = ToScrPos(thing.body.Position);
+
+                    _spriteBatch.Draw(texture: thing.tex,
+                                      position: scrPos,
+                                      sourceRectangle: new Rectangle(0, 0, thing.tex.Width, thing.tex.Height),
+                                      color: new Color(thing.drawTintRed, thing.drawTintGreen,
+                                                       thing.drawTintBlue, thing.drawTintAlpha) /*Color.White*/,
+                                      //rotation: 0.0f,
+                                      rotation: -thing.body.Rotation,
+                                      origin: thing.origin,
+                                      scale: thing.scale,
+                                      effects: SpriteEffects.None,
+                                      layerDepth: 0.0f);
+                }
+            }
+            else
+            {
+                Debug.WriteLine("Client should only draw from received drawData");
             }
 
             _spriteBatch.End();
