@@ -83,6 +83,12 @@ namespace polyframework
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
+            // TEST, just to see if the networking works
+            if (Keyboard.GetState().IsKeyDown(Keys.X))
+                PolyNetworking.Networking.SendDrawData("Test send draw data (X)");
+            if (Keyboard.GetState().IsKeyDown(Keys.C))
+                PolyNetworking.Networking.SendClientInput("Test send client input (C)");
+
             foreach (Thing plr in players)
                 ApplyUserInput(plr);
 
