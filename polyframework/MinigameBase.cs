@@ -173,11 +173,26 @@ namespace Minigame_Base
                                       scale: thing.scale,
                                       effects: SpriteEffects.None,
                                       layerDepth: 0.0f);
+
+                    // The clients will also want to draw the things, so send draw data to them
+                    PolyNetworking.Networking.SendDrawData("DrawThing;" + thing.id + ";" + scrPos.X + ";" + scrPos.Y + ";" + thing.drawTintAlpha + ";" + thing.drawTintRed + ";" + thing.drawTintGreen + ";" + thing.drawTintBlue + ";" + thing.body.Rotation);
+
                 }
             }
             else
             {
-                Debug.WriteLine("Client should only draw from received drawData");
+                Debug.WriteLine("Client should only draw from received drawData. For now, just split and log drawData.");
+
+                // Get the latest drawData that has been received from the server
+                string drawData = PolyNetworking.Networking.GetReceivedDrawData();
+
+                // Split the drawData strings on ';'
+                string[] drawDataArr = drawData.Split(';');
+
+                // Loop through the drawData strings
+                // For now just log them
+                foreach (string drawDataStr in drawDataArr)
+                    Debug.WriteLine("Next drawDataStr: " + drawDataStr);
             }
 
             _spriteBatch.End();
