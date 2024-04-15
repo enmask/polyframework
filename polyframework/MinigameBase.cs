@@ -38,6 +38,8 @@ namespace Minigame_Base
         // TODO: Maybe move these to Networking.cs
         const char OBJECT_SEPARATOR = '#';
         const char FIELD_SEPARATOR = ';';
+        const string SPECIFIER_THING = "T";
+            
 
         //
         // Instance variables
@@ -180,11 +182,11 @@ namespace Minigame_Base
                                       layerDepth: 0.0f);
 
                     // The clients will also want to draw the things, so send draw data to them
-                    string thingDrawData = "DrawThing;" + thing.id + ";" + scrPos.X + ";" + scrPos.Y + ";" + thing.drawTintAlpha + ";" + thing.drawTintRed + ";" + thing.drawTintGreen + ";" + thing.drawTintBlue + ";" + thing.body.Rotation + "#";
+                    string thingDrawData = Thing2DrawData(thing);
                     frameDrawData += thingDrawData;
                 }
+                Debug.WriteLine("frameDrawData: " + frameDrawData);
                 PolyNetworking.Networking.SendDrawData(frameDrawData);
-
             }
             else
             {
@@ -212,6 +214,25 @@ namespace Minigame_Base
 
             base.Draw(gameTime);
         }
+
+
+        protected string Thing2DrawData(Thing thing)
+        {
+            Vector2 scrPos = ToScrPos(thing.body.Position);
+
+            string str = SPECIFIER_THING + ";" + thing.id + ";" +
+                         scrPos.X + ";" + scrPos.Y + ";" +
+                         thing.drawTintAlpha + ";" + thing.drawTintRed + ";" +
+                         thing.drawTintGreen + ";" + thing.drawTintBlue + ";" +
+                         thing.body.Rotation + "#";
+
+            thing.
+
+            Debug.WriteLine("Thing2DrawData: " + str);
+
+            return str;
+        }
+
 
 
         protected void ActOnUpDownLeftRightInput(Thing thing)
