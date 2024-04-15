@@ -35,6 +35,10 @@ namespace Minigame_Base
         const float HORIZONTAL_FORCE_TO_MIDDLE_FACTOR = 0.0f;  // Was 0.0001f form Shuffleboard
         const float VERTICAL_FORCE_TO_MIDDLE_FACTOR = 0.0f; // Was 0.00035f for Shuffleboard
 
+        // TODO: Maybe move these to Networking.cs
+        const char OBJECT_SEPARATOR = '#';
+        const char FIELD_SEPARATOR = ';';
+
         //
         // Instance variables
         //
@@ -176,7 +180,7 @@ namespace Minigame_Base
                                       layerDepth: 0.0f);
 
                     // The clients will also want to draw the things, so send draw data to them
-                    string thingDrawData = "DrawThing;" + thing.id + ";" + scrPos.X + ";" + scrPos.Y + ";" + thing.drawTintAlpha + ";" + thing.drawTintRed + ";" + thing.drawTintGreen + ";" + thing.drawTintBlue + ";" + thing.body.Rotation;
+                    string thingDrawData = "DrawThing;" + thing.id + ";" + scrPos.X + ";" + scrPos.Y + ";" + thing.drawTintAlpha + ";" + thing.drawTintRed + ";" + thing.drawTintGreen + ";" + thing.drawTintBlue + ";" + thing.body.Rotation + "#";
                     frameDrawData += thingDrawData;
                 }
                 PolyNetworking.Networking.SendDrawData(frameDrawData);
@@ -189,15 +193,21 @@ namespace Minigame_Base
                 // Get the latest drawData that has been received from the server
                 string drawData = PolyNetworking.Networking.GetReceivedDrawData();
 
-                // Split the drawData strings on ';'
-                string[] drawDataArr = drawData.Split(';');
+                // Split the drawData string into an array of things
+                string[] thingStrings = drawData.Split(OBJECT_SEPARATOR);
 
-                // Loop through the drawData strings
-                // For now just log them
-                foreach (string drawDataStr in drawDataArr)
-                    Debug.WriteLine("Next drawDataStr: " + drawDataStr);
+                // Loop over the thing drawData strings
+                foreach (string thingString in thingStrings)
+                {
+                    // Split thing into an array of values
+                    string[] valueStrings = thingString.Split(FIELD_SEPARATOR);
+
+                    // Loop over the drawData strings
+                    // For now just log them
+                    foreach (string valueString in valueStrings)
+                        Debug.WriteLine("Next valueString: " + valueString);
+                }
             }
-
             _spriteBatch.End();
 
             base.Draw(gameTime);
