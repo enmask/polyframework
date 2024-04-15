@@ -226,10 +226,7 @@ namespace Minigame_Base
                          thing.drawTintGreen + ";" + thing.drawTintBlue + ";" +
                          thing.body.Rotation + "#";
 
-            thing.
-
             Debug.WriteLine("Thing2DrawData: " + str);
-
             return str;
         }
 
