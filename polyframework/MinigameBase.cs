@@ -152,6 +152,7 @@ namespace Minigame_Base
 
             if (isServer)
             {
+                string frameDrawData = "";
 
                 foreach (KeyValuePair<int, Thing> kvp in things)
                 {
@@ -175,9 +176,11 @@ namespace Minigame_Base
                                       layerDepth: 0.0f);
 
                     // The clients will also want to draw the things, so send draw data to them
-                    PolyNetworking.Networking.SendDrawData("DrawThing;" + thing.id + ";" + scrPos.X + ";" + scrPos.Y + ";" + thing.drawTintAlpha + ";" + thing.drawTintRed + ";" + thing.drawTintGreen + ";" + thing.drawTintBlue + ";" + thing.body.Rotation);
-
+                    string thingDrawData = "DrawThing;" + thing.id + ";" + scrPos.X + ";" + scrPos.Y + ";" + thing.drawTintAlpha + ";" + thing.drawTintRed + ";" + thing.drawTintGreen + ";" + thing.drawTintBlue + ";" + thing.body.Rotation;
+                    frameDrawData += thingDrawData;
                 }
+                PolyNetworking.Networking.SendDrawData(frameDrawData);
+
             }
             else
             {
