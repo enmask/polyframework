@@ -76,6 +76,13 @@ namespace polyframework
 
             // Load the font
             font = Content.Load<SpriteFont>("font");
+
+            // TEMPORARY TEST, just to get textureDict created
+            // Load level (textures, colliders, and map)
+            string levelFolder = Path.Combine(MINIGAME_NAME, LEVEL_NAME);
+            LoadLevel(Content.RootDirectory, levelFolder);
+
+
         }
 
         protected override void Update(GameTime gameTime)

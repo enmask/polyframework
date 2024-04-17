@@ -9,6 +9,8 @@ using nkast.Aether.Physics2D.Dynamics;
 using nkast.Aether.Physics2D.Collision.Shapes;
 using Newtonsoft.Json;
 using System.IO;
+using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 //using static System.Windows.Forms.VisualStyles.VisualStyleElement.Tab;
 
 namespace Minigame_Base
@@ -56,6 +58,8 @@ namespace Minigame_Base
         Dictionary<string, List<Shape>> colliderDict;
         Dictionary<string, Texture2D> textureDict;
 
+        Dictionary<int, string> testIndexMapping;
+
         readonly Vector2 TILE_OFFSET = new Vector2(5.45f, 5.23f);
 
         protected List<Core.Timer> timers = new List<Core.Timer>();
@@ -88,6 +92,15 @@ namespace Minigame_Base
             // Dictionaries for looking up a loaded texture or shape
             textureDict = new Dictionary<string, Texture2D>();
             colliderDict = new Dictionary<string, List<Shape>>();
+
+            // TEST, right now this is only for building the texture map
+            //string levelFolder = Path.Combine(MINIGAME_NAME, LEVEL_NAME);
+            //LoadLevel(Content.RootDirectory, MINIGAME_NAME);
+            // Better use this one, because it's more general
+            InitializeTextureMap();
+
+            // TEST
+            testIndexMapping = BuildIndexMapping(Content.RootDirectory);
 
             base.Initialize();
         }
@@ -169,6 +182,8 @@ namespace Minigame_Base
 
                     Vector2 scrPos = ToScrPos(thing.body.Position);
 
+                    Debug.WriteLine("Thing " + thing.id + " has name: " + thing.tex.Name);
+
                     _spriteBatch.Draw(texture: thing.tex,
                                       position: scrPos,
                                       sourceRectangle: new Rectangle(0, 0, thing.tex.Width, thing.tex.Height),
@@ -182,7 +197,8 @@ namespace Minigame_Base
                                       layerDepth: 0.0f);
 
                     // The clients will also want to draw the things, so send draw data to them
-                    string thingDrawData = Thing2DrawData(thing);
+                    string thingDrawData = ThingToDrawData(thing);
+
                     frameDrawData += thingDrawData;
                 }
                 Debug.WriteLine("frameDrawData: " + frameDrawData);
@@ -204,6 +220,21 @@ namespace Minigame_Base
                     // Split thing into an array of values
                     string[] valueStrings = thingString.Split(FIELD_SEPARATOR);
 
+                    Texture2D tex = IndexToTexture(int.Parse(valueStrings[1]));
+
+                    /*
+                    _spriteBatch.Draw(texture: thing.tex,
+                                               position: scrPos,
+                                               sourceRectangle: new Rectangle(0, 0, thing.tex.Width, thing.tex.Height),
+                                               color: Color.White,
+                                               rotation: 0.0f,
+                                               //rotation: -thing.body.Rotation,
+                                               origin: new Vector2(0, 0),
+                                               scale: new Vector2(1, 1),
+                                               effects: SpriteEffects.None,
+                                               layerDepth: 0.0f);
+                    */
+
                     // Loop over the drawData strings
                     // For now just log them
                     foreach (string valueString in valueStrings)
@@ -216,20 +247,139 @@ namespace Minigame_Base
         }
 
 
-        protected string Thing2DrawData(Thing thing)
+        protected string ThingToDrawData(Thing thing)
         {
             Vector2 scrPos = ToScrPos(thing.body.Position);
 
-            string str = SPECIFIER_THING + ";" + thing.id + ";" +
+            string str = SPECIFIER_THING + ";" + TextureToIndex(thing.tex) /* "888" */ + ";" +
                          scrPos.X + ";" + scrPos.Y + ";" +
                          thing.drawTintAlpha + ";" + thing.drawTintRed + ";" +
                          thing.drawTintGreen + ";" + thing.drawTintBlue + ";" +
                          thing.body.Rotation + "#";
 
-            Debug.WriteLine("Thing2DrawData: " + str);
+            Debug.WriteLine("ThingToDrawData: " + str);
             return str;
         }
 
+        /**/
+        int TextureToIndex(Texture2D tex)
+        {
+            int index = -1;
+            foreach (var item in testIndexMapping)
+            {
+                if (item.Value == tex.Name)
+                {
+                    index = item.Key;
+                    break;
+                }
+            }
+            return index;
+        }
+        /**/
+
+        Texture2D IndexToTexture(int index)
+        {
+            string texName = "Unknown";
+            if (testIndexMapping.ContainsKey(index))
+                texName = testIndexMapping[index];
+            return textureDict[texName];
+        }
+
+
+
+
+
+        protected void InitializeTextureMap() {
+            string rootDirectory = Content.RootDirectory;
+
+            // Beräknar den fullständiga sökvägen till 'Content'-mappen baserat på den aktuella arbetskatalogen.
+            string contentFullPath = Path.Combine(System.Environment.CurrentDirectory, rootDirectory);
+
+
+            var textureMapping = BuildTextureMapping(rootDirectory);
+
+            foreach (var item in textureMapping)
+            {
+                Debug.WriteLine($"Next key/item: {item.Key}: {item.Value}");
+            }
+        }
+
+        
+        static Dictionary<int, string> BuildTextureMapping(string rootDirectory)
+        {
+            Debug.WriteLine("BuildTextureMapping called with rootDirectory: " + rootDirectory);
+            var textureFiles = Directory.GetFiles(rootDirectory, "*.xnb", SearchOption.AllDirectories);
+            Debug.WriteLine("BuildTextureMapping: textureFiles.Length: " + textureFiles.Length);
+
+            var mapping = new Dictionary<int, string>();
+
+            int index = 0;
+            foreach (var filePath in textureFiles)
+            {
+                // Här kan du välja att använda den fullständiga sökvägen eller bara en relativ del av den
+                // Beroende på dina behov. Exemplet nedan använder den relativa sökvägen från rootDirectory.
+                string relativePath = Path.GetRelativePath(rootDirectory, filePath);
+
+                mapping.Add(index, relativePath);
+                index++;
+            }
+
+            return mapping;
+        }
+
+
+
+
+        /*
+        // BAD, static: New version, expects only "Content"
+        static Dictionary<int, string> BuildTextureMapping(string contentFolderName)
+        {
+            // Antag att Content-mappen ligger i samma katalog som den körbara applikationen.
+            string rootDirectory = Path.Combine(Environment.CurrentDirectory, contentFolderName);
+
+            // Kontrollera om den uträknade sökvägen existerar
+            if (!Directory.Exists(rootDirectory))
+            {
+                Console.WriteLine($"Kunde inte hitta '{rootDirectory}'. Kontrollera att du har angivit rätt plats för Content-mappen.");
+                return new Dictionary<int, string>();
+            }
+
+            var textureFiles = Directory.GetFiles(rootDirectory, "*.xnb", SearchOption.AllDirectories);
+            var mapping = new Dictionary<int, string>();
+
+            int index = 0;
+            foreach (var filePath in textureFiles)
+            {
+                // Tar bort '.xnb'-ändelsen och använder den relativa sökvägen från 'rootDirectory'
+                string relativePath = Path.GetRelativePath(rootDirectory, filePath);
+                relativePath = Path.ChangeExtension(relativePath, null); // Tar bort .xnb-filändelsen
+
+                mapping.Add(index, relativePath);
+                index++;
+            }
+
+            return mapping;
+        }
+        */
+
+
+        static Dictionary<int, string> BuildIndexMapping(string rootDirectory)
+        {
+            var files = Directory.GetFiles(rootDirectory, "*.*", SearchOption.AllDirectories)
+                        .Select(filePath => Path.GetRelativePath(rootDirectory, filePath)) // Gör sökvägar relativa
+                        .OrderBy(name => name) // Sortera alfabetiskt
+                        .ToList();
+
+            var indexMapping = new Dictionary<int, string>();
+
+            for (int i = 0; i < files.Count; i++)
+            {
+                string nameWithoutExtension = Path.ChangeExtension(files[i], null); // Tar bort .xnb-filändelsen
+                indexMapping[i] = nameWithoutExtension;
+            }
+
+            return indexMapping;
+        }
 
 
         protected void ActOnUpDownLeftRightInput(Thing thing)
