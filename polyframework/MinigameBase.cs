@@ -283,7 +283,7 @@ namespace Minigame_Base
         {
             string texName = "Unknown";
             if (testIndexMapping.ContainsKey(index))
-                texName = testIndexMapping[index];
+                texName = testIndexMapping[index].Replace('\\', '/');
             return textureDict[texName];
         }
 
@@ -377,7 +377,7 @@ namespace Minigame_Base
             for (int i = 0; i < files.Count; i++)
             {
                 string nameWithoutExtension = Path.ChangeExtension(files[i], null); // Tar bort .xnb-filändelsen
-                indexMapping[i] = nameWithoutExtension;
+                indexMapping[i] = nameWithoutExtension.Replace('\\', '/');
             }
 
             return indexMapping;
@@ -464,8 +464,12 @@ namespace Minigame_Base
             var collidersDataDict = new Dictionary<string, Core.CollidersData>();
             var allContentFiles = Directory.GetFiles(contentFolder + "/" + levelFolder, "*.*", SearchOption.AllDirectories);
 
+            // Använd LINQ för att ersätta alla "\" med "/" i varje sökväg.
+            var normalizedPaths = allContentFiles.Select(path => path.Replace("\\", "/")).ToArray();
+
+
             // Load content files for pictures, colliders, and level
-            foreach (var file in allContentFiles)
+            foreach (var file in normalizedPaths)
             {
                 var extension = Path.GetExtension(file).ToLower();
 
@@ -481,7 +485,9 @@ namespace Minigame_Base
                 // Pictures (.png, .jpg etc) have been build into .xnb using the MGCB (MonoGame Content Builder) tool
                 if (extension == ".xnb")
                 {
-                    if (file.Contains("/Pictures/") || file.Contains("\\Pictures\\"))
+                    
+                    //if (file.Contains("/Pictures/") || file.Contains("\\Pictures\\"))
+                    if (assetPath.Contains("/Pictures/") || assetPath.Contains("\\Pictures\\"))
                     {
                         var texture = Content.Load<Texture2D>(assetPath);
                         // Save the texture to a collection
