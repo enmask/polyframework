@@ -217,6 +217,9 @@ namespace Minigame_Base
                 // Loop over the thing drawData strings
                 foreach (string thingString in thingStrings)
                 {
+                    if (thingString.Length == 0)
+                        continue;
+
                     // Split thing into an array of values
                     string[] valueStrings = thingString.Split(FIELD_SEPARATOR);
 
