@@ -491,7 +491,7 @@ namespace Minigame_Base
                     {
                         var texture = Content.Load<Texture2D>(assetPath);
                         // Save the texture to a collection
-                        textureDict[assetName] = texture;
+                        textureDict[assetPath] = texture;
                     }
 
                     // Add code for loading sound assets etc here.
