@@ -18,8 +18,11 @@ namespace polyframework
         const string MINIGAME_NAME = "TwoCars";
         const string LEVEL_NAME = "Level1";
 
+        // Font constants
+        const string FONT_NAME = "Fonts/font";
+
         // Car settings constants
-        const string CAR_PICTURE_NAME = "graycar";
+        const string CAR_PICTURE_NAME = "Pictures/graycar";
         const float CAR_ACCELERATION = 0.04f;
         const float CAR_TURN_POWER = 0.02f;
 
@@ -75,7 +78,8 @@ namespace polyframework
             plrTex = Content.Load<Texture2D>(carPicPath);
 
             // Load the font
-            font = Content.Load<SpriteFont>("font");
+            string fontPath = Path.Combine(MINIGAME_NAME, FONT_NAME);
+            font = Content.Load<SpriteFont>(fontPath);
 
             // TEMPORARY TEST, just to get textureDict created
             // Load level (textures, colliders, and map)
