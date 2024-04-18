@@ -269,7 +269,7 @@ namespace Minigame_Base
             int index = -1;
             foreach (var item in testIndexMapping)
             {
-                if (item.Value == tex.Name)
+                if (item.Value == tex.Name.Replace('\\', '/'))
                 {
                     index = item.Key;
                     break;
