@@ -221,11 +221,13 @@ namespace Minigame_Base
                     string[] valueStrings = thingString.Split(FIELD_SEPARATOR);
 
                     Texture2D tex = IndexToTexture(int.Parse(valueStrings[1]));
+                    Vector2 physPos = new Vector2(float.Parse(valueStrings[2]), float.Parse(valueStrings[3]));
+                    Vector2 scrPos = ToScrPos(physPos);
 
-                    /*
-                    _spriteBatch.Draw(texture: thing.tex,
+                    /**/
+                    _spriteBatch.Draw(texture: tex,
                                                position: scrPos,
-                                               sourceRectangle: new Rectangle(0, 0, thing.tex.Width, thing.tex.Height),
+                                               sourceRectangle: new Rectangle(0, 0, tex.Width, tex.Height),
                                                color: Color.White,
                                                rotation: 0.0f,
                                                //rotation: -thing.body.Rotation,
@@ -233,7 +235,7 @@ namespace Minigame_Base
                                                scale: new Vector2(1, 1),
                                                effects: SpriteEffects.None,
                                                layerDepth: 0.0f);
-                    */
+                    /**/
 
                     // Loop over the drawData strings
                     // For now just log them
