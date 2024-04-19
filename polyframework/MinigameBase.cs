@@ -41,7 +41,14 @@ namespace Minigame_Base
         const char OBJECT_SEPARATOR = '#';
         const char FIELD_SEPARATOR = ';';
         const string SPECIFIER_THING = "T";
-            
+
+        // These constants are used when sending draw data over the network
+        const int NETWORK_INDEX_TIMESTAMP = 1;
+        const int NETWORK_INDEX_TEXTURE_INDEX = 2;
+        const int NETWORK_INDEX_XPOS = 3;
+        const int NETWORK_INDEX_YPOS = 4;
+        const int NETWORK_INDEX_COLOR = 5;
+        const int NETWORK_INDEX_ROTATION = 6;
 
         //
         // Instance variables
@@ -223,8 +230,22 @@ namespace Minigame_Base
                     // Split thing into an array of values
                     string[] valueStrings = thingString.Split(FIELD_SEPARATOR);
 
-                    Texture2D tex = IndexToTexture(int.Parse(valueStrings[1]));
-                    Vector2 scrPos = new Vector2(float.Parse(valueStrings[2]), float.Parse(valueStrings[3]));
+                    /*
+                    const int NETWORK_INDEX_TIMESTAMP = 1;
+                    const int NETWORK_INDEX_TEXTURE_INDEX = 2;
+                    const int NETWORK_INDEX_XPOS = 3;
+                    const int NETWORK_INDEX_YPOS = 4;
+                    const int NETWORK_INDEX_COLOR = 5;
+                    const int NETWORK_INDEX_ROTATION = 6;
+                    */
+
+                    string timestamp = valueStrings[NETWORK_INDEX_TIMESTAMP];
+                    Texture2D tex = IndexToTexture(int.Parse(valueStrings[NETWORK_INDEX_TEXTURE_INDEX]));
+                    Vector2 scrPos = new Vector2(float.Parse(valueStrings[NETWORK_INDEX_XPOS]),
+                                                 float.Parse(valueStrings[NETWORK_INDEX_YPOS]));
+                    //Color color = new Color(int.Parse(valueStrings[NETWORK_INDEX_COLOR]));
+                    Color color = HexToColor(valueStrings[NETWORK_INDEX_COLOR]);
+                    //Color drawColor = new Color(255, 255, 255)
 
                     _spriteBatch.Draw(texture: tex,
                                                position: scrPos,
@@ -237,8 +258,7 @@ namespace Minigame_Base
                                                effects: SpriteEffects.None,
                                                layerDepth: 0.0f);
 
-                    // Loop over the drawData strings
-                    // For now just log them
+                    // Log the drawData strings
                     foreach (string valueString in valueStrings)
                         Debug.WriteLine("Next valueString: " + valueString);
                 }
@@ -253,10 +273,27 @@ namespace Minigame_Base
         {
             Vector2 scrPos = ToScrPos(thing.body.Position);
 
-            string str = SPECIFIER_THING + ";" + TextureToIndex(thing.tex) /* "888" */ + ";" +
+            string timestamp = System.DateTime.Now.ToString("HHmmss");
+            //string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            Debug.WriteLine("timestamp: " + timestamp);
+
+            /*
+                     const int NETWORK_INDEX_TIMESTAMP = 1;
+        const int NETWORK_INDEX_TEXTURE_INDEX = 2;
+        const int NETWORK_INDEX_XPOS = 3;
+        const int NETWORK_INDEX_YPOS = 4;
+        const int NETWORK_INDEX_COLOR = 5;
+        const int NETWORK_INDEX_ROTATION = 6;
+            */
+
+            string colorHex = ColorToHex(thing.drawTintAlpha, thing.drawTintRed, thing.drawTintGreen, thing.drawTintBlue);
+
+
+            string str = SPECIFIER_THING + ";" + TextureToIndex(thing.tex) + ";" +
                          scrPos.X + ";" + scrPos.Y + ";" +
-                         thing.drawTintAlpha + ";" + thing.drawTintRed + ";" +
-                         thing.drawTintGreen + ";" + thing.drawTintBlue + ";" +
+                         colorHex + ";" +
+                         //thing.drawTintAlpha + ";" + thing.drawTintRed + ";" +
+                         //thing.drawTintGreen + ";" + thing.drawTintBlue + ";" +
                          thing.body.Rotation + "#";
 
             Debug.WriteLine("ThingToDrawData: " + str);
@@ -287,11 +324,30 @@ namespace Minigame_Base
             return textureDict[texName];
         }
 
+        public static string ColorToHex(int alpha, int red, int green, int blue)
+        {
+            return alpha.ToString("X2") + red.ToString("X2") + green.ToString("X2") + blue.ToString("X2");
+        }
+
+
+        public static Color HexToColor(string hex)
+        {
+            if (hex.Length != 8)
+            {
+                throw new System.ArgumentException("Hex must be 8 characters long", nameof(hex));
+            }
+
+            int alpha = System.Convert.ToInt32(hex.Substring(0, 2), 16);
+            int red = System.Convert.ToInt32(hex.Substring(2, 2), 16);
+            int green = System.Convert.ToInt32(hex.Substring(4, 2), 16);
+            int blue = System.Convert.ToInt32(hex.Substring(6, 2), 16);
+
+            return new Color(red, green, blue, alpha);
+        }
 
 
 
-
-        protected void InitializeTextureMap() {
+    protected void InitializeTextureMap() {
             string rootDirectory = Content.RootDirectory;
 
             // Beräknar den fullständiga sökvägen till 'Content'-mappen baserat på den aktuella arbetskatalogen.
