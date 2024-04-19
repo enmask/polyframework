@@ -274,22 +274,13 @@ namespace Minigame_Base
             Vector2 scrPos = ToScrPos(thing.body.Position);
 
             string timestamp = System.DateTime.Now.ToString("HHmmss");
-            //string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             Debug.WriteLine("timestamp: " + timestamp);
-
-            /*
-                     const int NETWORK_INDEX_TIMESTAMP = 1;
-        const int NETWORK_INDEX_TEXTURE_INDEX = 2;
-        const int NETWORK_INDEX_XPOS = 3;
-        const int NETWORK_INDEX_YPOS = 4;
-        const int NETWORK_INDEX_COLOR = 5;
-        const int NETWORK_INDEX_ROTATION = 6;
-            */
 
             string colorHex = ColorToHex(thing.drawTintAlpha, thing.drawTintRed, thing.drawTintGreen, thing.drawTintBlue);
 
-
-            string str = SPECIFIER_THING + ";" + TextureToIndex(thing.tex) + ";" +
+            string str = SPECIFIER_THING + ";" +
+                         timestamp + ";" +
+                         TextureToIndex(thing.tex) + ";" +
                          scrPos.X + ";" + scrPos.Y + ";" +
                          colorHex + ";" +
                          //thing.drawTintAlpha + ";" + thing.drawTintRed + ";" +
