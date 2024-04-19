@@ -243,16 +243,14 @@ namespace Minigame_Base
                     Texture2D tex = IndexToTexture(int.Parse(valueStrings[NETWORK_INDEX_TEXTURE_INDEX]));
                     Vector2 scrPos = new Vector2(float.Parse(valueStrings[NETWORK_INDEX_XPOS]),
                                                  float.Parse(valueStrings[NETWORK_INDEX_YPOS]));
-                    //Color color = new Color(int.Parse(valueStrings[NETWORK_INDEX_COLOR]));
                     Color color = HexToColor(valueStrings[NETWORK_INDEX_COLOR]);
-                    //Color drawColor = new Color(255, 255, 255)
+                    float rotation = float.Parse(valueStrings[NETWORK_INDEX_ROTATION]);
 
                     _spriteBatch.Draw(texture: tex,
                                                position: scrPos,
                                                sourceRectangle: new Rectangle(0, 0, tex.Width, tex.Height),
-                                               color: Color.White,
-                                               rotation: 0.0f,
-                                               //rotation: -thing.body.Rotation,
+                                               color: color,
+                                               rotation: -rotation,
                                                origin: new Vector2(0, 0),
                                                scale: new Vector2(1, 1),
                                                effects: SpriteEffects.None,
