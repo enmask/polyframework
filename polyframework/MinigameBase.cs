@@ -189,14 +189,11 @@ namespace Minigame_Base
 
                     Vector2 scrPos = ToScrPos(thing.body.Position);
 
-                    Debug.WriteLine("Thing " + thing.id + " has name: " + thing.tex.Name);
-
                     _spriteBatch.Draw(texture: thing.tex,
                                       position: scrPos,
                                       sourceRectangle: new Rectangle(0, 0, thing.tex.Width, thing.tex.Height),
                                       color: new Color(thing.drawTintRed, thing.drawTintGreen,
                                                        thing.drawTintBlue, thing.drawTintAlpha) /*Color.White*/,
-                                      //rotation: 0.0f,
                                       rotation: -thing.body.Rotation,
                                       origin: thing.origin,
                                       scale: thing.scale,
@@ -208,13 +205,10 @@ namespace Minigame_Base
 
                     frameDrawData += thingDrawData;
                 }
-                Debug.WriteLine("frameDrawData: " + frameDrawData);
                 PolyNetworking.Networking.SendDrawData(frameDrawData);
             }
             else
             {
-                Debug.WriteLine("Client should only draw from received drawData. For now, just split and log drawData.");
-
                 // Get the latest drawData that has been received from the server
                 string drawData = PolyNetworking.Networking.GetReceivedDrawData();
 
@@ -229,15 +223,6 @@ namespace Minigame_Base
 
                     // Split thing into an array of values
                     string[] valueStrings = thingString.Split(FIELD_SEPARATOR);
-
-                    /*
-                    const int NETWORK_INDEX_TIMESTAMP = 1;
-                    const int NETWORK_INDEX_TEXTURE_INDEX = 2;
-                    const int NETWORK_INDEX_XPOS = 3;
-                    const int NETWORK_INDEX_YPOS = 4;
-                    const int NETWORK_INDEX_COLOR = 5;
-                    const int NETWORK_INDEX_ROTATION = 6;
-                    */
 
                     string timestamp = valueStrings[NETWORK_INDEX_TIMESTAMP];
                     Texture2D tex = IndexToTexture(int.Parse(valueStrings[NETWORK_INDEX_TEXTURE_INDEX]));
@@ -270,26 +255,23 @@ namespace Minigame_Base
         protected string ThingToDrawData(Thing thing)
         {
             Vector2 scrPos = ToScrPos(thing.body.Position);
-
             string timestamp = System.DateTime.Now.ToString("HHmmss");
-            Debug.WriteLine("timestamp: " + timestamp);
-
-            string colorHex = ColorToHex(thing.drawTintAlpha, thing.drawTintRed, thing.drawTintGreen, thing.drawTintBlue);
+            string colorHex = ColorToHex(thing.drawTintAlpha,
+                                         thing.drawTintRed,
+                                         thing.drawTintGreen,
+                                         thing.drawTintBlue);
 
             string str = SPECIFIER_THING + ";" +
                          timestamp + ";" +
                          TextureToIndex(thing.tex) + ";" +
                          scrPos.X + ";" + scrPos.Y + ";" +
                          colorHex + ";" +
-                         //thing.drawTintAlpha + ";" + thing.drawTintRed + ";" +
-                         //thing.drawTintGreen + ";" + thing.drawTintBlue + ";" +
                          thing.body.Rotation + "#";
 
             Debug.WriteLine("ThingToDrawData: " + str);
             return str;
         }
 
-        /**/
         int TextureToIndex(Texture2D tex)
         {
             int index = -1;
@@ -303,7 +285,6 @@ namespace Minigame_Base
             }
             return index;
         }
-        /**/
 
         Texture2D IndexToTexture(int index)
         {
