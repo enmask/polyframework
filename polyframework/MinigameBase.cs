@@ -42,13 +42,22 @@ namespace Minigame_Base
         const char FIELD_SEPARATOR = ';';
         const string SPECIFIER_THING = "T";
 
+
+
         // These constants are used when sending draw data over the network
+        // History of the network format for a thing.
+        // After commit 22f33dc: "T;timestamp;textureIndex;scrPosX;scrPosY;hexColor;rotation#"
+        // After commit XXXXXXX: "T;timestamp;textureIndex;scrPosX;scrPosY;hexColor;rotation;originX;originY;scaleX;scaleY#"
         const int NETWORK_INDEX_TIMESTAMP = 1;
         const int NETWORK_INDEX_TEXTURE_INDEX = 2;
         const int NETWORK_INDEX_XPOS = 3;
         const int NETWORK_INDEX_YPOS = 4;
         const int NETWORK_INDEX_COLOR = 5;
         const int NETWORK_INDEX_ROTATION = 6;
+        const int NETWORK_INDEX_XORIGIN = 7;  // Added in the commit after bb2cae1
+        const int NETWORK_INDEX_YORIGIN = 8;  // Added in the commit after bb2cae1
+        const int NETWORK_INDEX_XSCALE = 9;   // Added in the commit after bb2cae1
+        const int NETWORK_INDEX_YSCALE = 10;  // Added in the commit after bb2cae1
 
         //
         // Instance variables
@@ -237,14 +246,18 @@ namespace Minigame_Base
                                                  float.Parse(valueStrings[NETWORK_INDEX_YPOS]));
                     Color color = HexToColor(valueStrings[NETWORK_INDEX_COLOR]);
                     float rotation = float.Parse(valueStrings[NETWORK_INDEX_ROTATION]);
+                    Vector2 origin = new Vector2(float.Parse(valueStrings[NETWORK_INDEX_XORIGIN]),
+                                                 float.Parse(valueStrings[NETWORK_INDEX_YORIGIN]));
+                    Vector2 scale = new Vector2(float.Parse(valueStrings[NETWORK_INDEX_XSCALE]),
+                                                float.Parse(valueStrings[NETWORK_INDEX_YSCALE]));
 
                     _spriteBatch.Draw(texture: tex,
                                                position: scrPos,
                                                sourceRectangle: new Rectangle(0, 0, tex.Width, tex.Height),
                                                color: color,
                                                rotation: -rotation,
-                                               origin: new Vector2(0, 0),
-                                               scale: new Vector2(1, 1),
+                                               origin: origin,
+                                               scale: scale,
                                                effects: SpriteEffects.None,
                                                layerDepth: 0.0f);
 
@@ -257,6 +270,7 @@ namespace Minigame_Base
 
             base.Draw(gameTime);
         }
+
 
 
         protected string ThingToDrawData(Thing thing)
@@ -275,7 +289,11 @@ namespace Minigame_Base
                          GetTextureIndex(thing.tex.Name) + ";" +
                          scrPos.X + ";" + scrPos.Y + ";" +
                          colorHex + ";" +
-                         thing.body.Rotation + "#";
+                         thing.body.Rotation + ";" +
+                         thing.origin.X + ";" +
+                         thing.origin.Y + ";" +
+                         thing.scale.X + ";" +
+                         thing.scale.Y + "#";
 
             Debug.WriteLine("ThingToDrawData: " + str);
             return str;
