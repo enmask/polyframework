@@ -74,16 +74,17 @@ namespace polyframework
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             // Load the player texture
-            string carPicPath = Path.Combine(MINIGAME_NAME, CAR_PICTURE_NAME);
+            string carPicPath = MINIGAME_NAME + "/" + CAR_PICTURE_NAME;
             plrTex = Content.Load<Texture2D>(carPicPath);
+            Debug.WriteLine("Subclass LoadContent loaded texture: " + carPicPath);
 
             // Load the font
-            string fontPath = Path.Combine(MINIGAME_NAME, FONT_NAME);
+            string fontPath = MINIGAME_NAME + "/" + FONT_NAME;
             font = Content.Load<SpriteFont>(fontPath);
 
             // TEMPORARY TEST, just to get textureDict created
             // Load level (textures, colliders, and map)
-            string levelFolder = Path.Combine(MINIGAME_NAME, LEVEL_NAME);
+            string levelFolder = MINIGAME_NAME + "/" + LEVEL_NAME;
             // LoadLevel(Content.RootDirectory, levelFolder);
             // TEST, skip levelFolder
             LoadLevel(Content.RootDirectory, "");

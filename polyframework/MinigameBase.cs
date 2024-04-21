@@ -59,12 +59,16 @@ namespace Minigame_Base
         private bool isServer;
         protected World world;
 
-        // The dictionaries of things in the game
+        // The dictionary of things in the game
         public Dictionary<int, Thing> things;
-        
-        Dictionary<string, List<Shape>> colliderDict;
-        Dictionary<string, Texture2D> textureDict;
+        // The dictionary of the textures in the game
+        private Dictionary<int, Texture2D> textures;
+        private static int nextTextureId = 0;
 
+        Dictionary<string, List<Shape>> colliderDict;
+        // TODO: Remove, replaced by textures
+        Dictionary<string, Texture2D> textureDict;
+        // TODO: Remove, replaced by textures
         Dictionary<int, string> testIndexMapping;
 
         readonly Vector2 TILE_OFFSET = new Vector2(5.45f, 5.23f);
@@ -95,6 +99,7 @@ namespace Minigame_Base
         {
             world = new World();
             things = new Dictionary<int, Thing>();
+            textures = new Dictionary<int, Texture2D>();
 
             // Dictionaries for looking up a loaded texture or shape
             textureDict = new Dictionary<string, Texture2D>();
@@ -225,7 +230,9 @@ namespace Minigame_Base
                     string[] valueStrings = thingString.Split(FIELD_SEPARATOR);
 
                     string timestamp = valueStrings[NETWORK_INDEX_TIMESTAMP];
-                    Texture2D tex = IndexToTexture(int.Parse(valueStrings[NETWORK_INDEX_TEXTURE_INDEX]));
+                    // TODO: Remove, now using GetTexture instead
+                    //Texture2D tex = IndexToTexture(int.Parse(valueStrings[NETWORK_INDEX_TEXTURE_INDEX]));
+                    Texture2D tex = GetTexture(int.Parse(valueStrings[NETWORK_INDEX_TEXTURE_INDEX]));
                     Vector2 scrPos = new Vector2(float.Parse(valueStrings[NETWORK_INDEX_XPOS]),
                                                  float.Parse(valueStrings[NETWORK_INDEX_YPOS]));
                     Color color = HexToColor(valueStrings[NETWORK_INDEX_COLOR]);
@@ -263,7 +270,9 @@ namespace Minigame_Base
 
             string str = SPECIFIER_THING + ";" +
                          timestamp + ";" +
-                         TextureToIndex(thing.tex) + ";" +
+                         // TODO: Remove, now using GetTextureIndex instead
+                         //TextureToIndex(thing.tex) + ";" +
+                         GetTextureIndex(thing.tex.Name) + ";" +
                          scrPos.X + ";" + scrPos.Y + ";" +
                          colorHex + ";" +
                          thing.body.Rotation + "#";
@@ -294,6 +303,32 @@ namespace Minigame_Base
             return textureDict[texName];
         }
 
+        /*
+        SKIP  int GetTextureIndex(Texture2D texture)
+        int GetTextureIndex(string textureName)
+        int GetTexture(int textureIndex)
+        int GetTexture(string textureName)
+        SKIP  int GetTextureName(string textureIndex)
+        SKIP  int GetTextureName(string texture)
+         */
+
+        //Debug.WriteLine("ThingToDrawData: thing.tex.Name: " + thing.tex.Name + ". With GetTextu" + GetTextureIndex(thing.tex.Name));
+        int GetTextureIndex(string textureName)
+        {
+            foreach (var item in textures)
+            {
+                if (item.Value.Name == textureName)
+                    return item.Key;
+            }
+            throw new System.ArgumentException("Texture " + textureName + " not found in textures", nameof(textureName));
+        }
+
+        Texture2D GetTexture(int textureIndex)
+        {
+            return textures[textureIndex];
+        }
+
+
         public static string ColorToHex(int alpha, int red, int green, int blue)
         {
             return alpha.ToString("X2") + red.ToString("X2") + green.ToString("X2") + blue.ToString("X2");
@@ -321,8 +356,7 @@ namespace Minigame_Base
             string rootDirectory = Content.RootDirectory;
 
             // Beräknar den fullständiga sökvägen till 'Content'-mappen baserat på den aktuella arbetskatalogen.
-            string contentFullPath = Path.Combine(System.Environment.CurrentDirectory, rootDirectory);
-
+            string contentFullPath = System.Environment.CurrentDirectory + "/" + rootDirectory;
 
             var textureMapping = BuildTextureMapping(rootDirectory);
 
@@ -347,6 +381,9 @@ namespace Minigame_Base
                 // Här kan du välja att använda den fullständiga sökvägen eller bara en relativ del av den
                 // Beroende på dina behov. Exemplet nedan använder den relativa sökvägen från rootDirectory.
                 string relativePath = Path.GetRelativePath(rootDirectory, filePath);
+
+                // Replace backslashes with forward slashes
+                relativePath = relativePath.Replace('\\', '/');
 
                 mapping.Add(index, relativePath);
                 index++;
@@ -516,6 +553,7 @@ namespace Minigame_Base
                     if (assetPath.Contains("/Pictures/") || assetPath.Contains("\\Pictures\\"))
                     {
                         var texture = Content.Load<Texture2D>(assetPath);
+                        Debug.WriteLine("Loaded texture: " + assetPath);
                         // Save the texture to a collection
                         textureDict[assetPath] = texture;
                     }
@@ -564,7 +602,7 @@ namespace Minigame_Base
 
         protected LevelData LoadLevelMap(string assetPath)
         {
-            string levelFilePath = Path.Combine(Content.RootDirectory, assetPath + ".json");
+            string levelFilePath = Content.RootDirectory + "/" + assetPath + ".json";
             LevelData loadedLevel = LevelMapLoader.LoadLevelMap(levelFilePath);
             return loadedLevel;
         }
@@ -630,7 +668,15 @@ namespace Minigame_Base
 
         public void AddThing(Thing thing)
         {
+            Debug.WriteLine("AddThing called, thingId=" + thing.id + ", textureId = " + nextTextureId + ", textures.Count: " + textures.Count);
+
             things.Add(thing.id, thing);
+            //if (GetTextureName(thing.tex) == null)
+            if (!textures.ContainsValue(thing.tex))
+            {
+                textures.Add(nextTextureId++, thing.tex);
+                Debug.WriteLine("Added texture with textureId: " + (nextTextureId - 1) + ", textures.Count: " + textures.Count);
+            }
         }
         public void RemoveThing(Thing thing)
         {
