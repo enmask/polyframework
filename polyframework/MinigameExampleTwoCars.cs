@@ -82,7 +82,6 @@ namespace polyframework
             string fontPath = MINIGAME_NAME + "/" + FONT_NAME;
             font = Content.Load<SpriteFont>(fontPath);
 
-            // TEMPORARY TEST, just to get textureDict created
             // Load level (textures, colliders, and map)
             string levelFolder = MINIGAME_NAME + "/" + LEVEL_NAME;
             // LoadLevel(Content.RootDirectory, levelFolder);

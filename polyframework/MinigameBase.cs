@@ -54,10 +54,10 @@ namespace Minigame_Base
         const int NETWORK_INDEX_YPOS = 4;
         const int NETWORK_INDEX_COLOR = 5;
         const int NETWORK_INDEX_ROTATION = 6;
-        const int NETWORK_INDEX_XORIGIN = 7;  // Added in the commit after bb2cae1
-        const int NETWORK_INDEX_YORIGIN = 8;  // Added in the commit after bb2cae1
-        const int NETWORK_INDEX_XSCALE = 9;   // Added in the commit after bb2cae1
-        const int NETWORK_INDEX_YSCALE = 10;  // Added in the commit after bb2cae1
+        const int NETWORK_INDEX_XORIGIN = 7;  // Added in the commit 5fc7cdd
+        const int NETWORK_INDEX_YORIGIN = 8;  // Added in the commit 5fc7cdd
+        const int NETWORK_INDEX_XSCALE = 9;   // Added in the commit 5fc7cdd
+        const int NETWORK_INDEX_YSCALE = 10;  // Added in the commit 5fc7cdd
 
         //
         // Instance variables
@@ -75,15 +75,10 @@ namespace Minigame_Base
         private static int nextTextureId = 0;
 
         Dictionary<string, List<Shape>> colliderDict;
-        // TODO: Remove, replaced by textures
-        Dictionary<string, Texture2D> textureDict;
-        // TODO: Remove, replaced by textures
-        Dictionary<int, string> testIndexMapping;
 
         readonly Vector2 TILE_OFFSET = new Vector2(5.45f, 5.23f);
 
         protected List<Core.Timer> timers = new List<Core.Timer>();
-
 
         public MinigameBase()
         {
@@ -111,17 +106,9 @@ namespace Minigame_Base
             textures = new Dictionary<int, Texture2D>();
 
             // Dictionaries for looking up a loaded texture or shape
-            textureDict = new Dictionary<string, Texture2D>();
             colliderDict = new Dictionary<string, List<Shape>>();
 
-            // TEST, right now this is only for building the texture map
-            //string levelFolder = Path.Combine(MINIGAME_NAME, LEVEL_NAME);
-            //LoadLevel(Content.RootDirectory, MINIGAME_NAME);
-            // Better use this one, because it's more general
             InitializeTextureMap();
-
-            // TEST
-            testIndexMapping = BuildIndexMapping(Content.RootDirectory);
 
             base.Initialize();
         }
@@ -299,38 +286,13 @@ namespace Minigame_Base
             return str;
         }
 
-        int TextureToIndex(Texture2D tex)
-        {
-            int index = -1;
-            foreach (var item in testIndexMapping)
-            {
-                if (item.Value == tex.Name.Replace('\\', '/'))
-                {
-                    index = item.Key;
-                    break;
-                }
-            }
-            return index;
-        }
-
-        Texture2D IndexToTexture(int index)
-        {
-            string texName = "Unknown";
-            if (testIndexMapping.ContainsKey(index))
-                texName = testIndexMapping[index].Replace('\\', '/');
-            return textureDict[texName];
-        }
-
-        /*
-        SKIP  int GetTextureIndex(Texture2D texture)
-        int GetTextureIndex(string textureName)
-        int GetTexture(int textureIndex)
-        int GetTexture(string textureName)
-        SKIP  int GetTextureName(string textureIndex)
-        SKIP  int GetTextureName(string texture)
-         */
-
-        //Debug.WriteLine("ThingToDrawData: thing.tex.Name: " + thing.tex.Name + ". With GetTextu" + GetTextureIndex(thing.tex.Name));
+        // Mapping functions for textures
+        //   int GetTextureIndex(Texture2D texture)    SKIP
+        //   int GetTextureIndex(string textureName)   DONE
+        //   int GetTexture(int textureIndex)          DONE
+        //   int GetTexture(string textureName)        LATER
+        //   int GetTextureName(string textureIndex)   SKIP
+        //   int GetTextureName(string texture)        SKIP
         int GetTextureIndex(string textureName)
         {
             foreach (var item in textures)
@@ -572,8 +534,6 @@ namespace Minigame_Base
                     {
                         var texture = Content.Load<Texture2D>(assetPath);
                         Debug.WriteLine("Loaded texture: " + assetPath);
-                        // Save the texture to a collection
-                        textureDict[assetPath] = texture;
                     }
 
                     // Add code for loading sound assets etc here.
@@ -612,9 +572,8 @@ namespace Minigame_Base
 
         void BuildThingColliderShapes(string objName, Core.CollidersData collidersData)
         {
-            // Build shape(s) for this collider data
-            //Texture2D tex = textureDict[objName];
-            Texture2D tex = PieceNameToTex(objName);
+            // TODO: This call is untested, need to load a tilemap for that
+            Texture2D tex = GetTexture(GetTextureIndex(objName));
             colliderDict[objName] = Core.ColliderManager.CreateShapesFromCollidersData(collidersData, world, tex.Width, tex.Height, Minigame_Base.MinigameBase.SCALE);
         }
 
@@ -634,7 +593,8 @@ namespace Minigame_Base
 
         Thing AddLevelThing(string trackPieceName, Vector2 wallPos, float wallRot)
         {
-            Texture2D tex = PieceNameToTex(trackPieceName);
+            // TODO: This call is untested, need to load a tilemap for that
+            Texture2D tex = GetTexture(GetTextureIndex(trackPieceName));
 
             Thing t = new Thing(world,
                                 tex,
@@ -647,37 +607,8 @@ namespace Minigame_Base
                                 originY: tex.Height / 2,
                                 rot: wallRot);
 
-            // TODO: Create correct fixture inside Thing constructor?
-            //HackSwitchFixture(t, trackPieceName);
-
             AddThing(t);
             return t;
-        }
-
-        /*
-        void HackSwitchFixture(Thing t, string trackPieceName)
-        {
-            // The Thing constructor has already created t.body,
-            // and even t.body.FixtureList[0].
-            // Now try to replace the existing Fixture with the one created from JSON data
-            t.body.Remove(t.body.FixtureList[0]);
-
-            List<Shape> shapeList = colliderDict[trackPieceName];
-
-            foreach (Shape shape in shapeList)
-                t.body.CreateFixture(shape);
-
-            // Tiles should never be rotated
-            t.body.Rotation = 0.0f;
-        }
-        */
-
-        Texture2D PieceNameToTex(string pieceName)
-        {
-            Texture2D tex = null;
-            if (textureDict.ContainsKey(pieceName))
-                tex = textureDict[pieceName];
-            return tex;
         }
 
         //
