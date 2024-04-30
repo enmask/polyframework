@@ -1,8 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using SharpDX.Direct2D1.Effects;
+//using SharpDX.Direct2D1.Effects;
 using System.Collections.Generic;
 using System.Diagnostics;
 using nkast.Aether.Physics2D.Dynamics;
@@ -10,7 +11,8 @@ using nkast.Aether.Physics2D.Collision.Shapes;
 using Newtonsoft.Json;
 using System.IO;
 using System.Linq;
-using System.Reflection.Metadata.Ecma335;
+//using System.Reflection.Metadata.Ecma335;
+//using System.Net.Mail;
 //using static System.Windows.Forms.VisualStyles.VisualStyleElement.Tab;
 
 namespace Minigame_Base
@@ -42,22 +44,24 @@ namespace Minigame_Base
         const char FIELD_SEPARATOR = ';';
         const string SPECIFIER_THING = "T";
 
+        // These constants are used when sending draw data and client input over the network
+        const int DRAWDATA_INDEX_SPECIFIER = 0;
+        const int DRAWDATA_INDEX_TEXTURE_INDEX = 1;
+        const int DRAWDATA_INDEX_XPOS = 2;
+        const int DRAWDATA_INDEX_YPOS = 3;
+        const int DRAWDATA_INDEX_COLOR = 4;
+        const int DRAWDATA_INDEX_ROTATION = 5;
+        const int DRAWDATA_INDEX_XORIGIN = 6;  // Added in the commit 5fc7cdd
+        const int DRAWDATA_INDEX_YORIGIN = 7;  // Added in the commit 5fc7cdd
+        const int DRAWDATA_INDEX_XSCALE = 8;   // Added in the commit 5fc7cdd
+        const int DRAWDATA_INDEX_YSCALE = 9;  // Added in the commit 5fc7cdd
 
+        const int CLIENTINPUT_INDEX_KEYS = 1;            // TODO: Not used yet
+        const int CLIENTINPUT_INDEX_GAMEPAD_BUTTONS = 2; // TODO: Not used yet
 
-        // These constants are used when sending draw data over the network
-        // History of the network format for a thing.
-        // After commit 22f33dc: "T;timestamp;textureIndex;scrPosX;scrPosY;hexColor;rotation#"
-        // After commit XXXXXXX: "T;timestamp;textureIndex;scrPosX;scrPosY;hexColor;rotation;originX;originY;scaleX;scaleY#"
-        const int NETWORK_INDEX_TIMESTAMP = 1;
-        const int NETWORK_INDEX_TEXTURE_INDEX = 2;
-        const int NETWORK_INDEX_XPOS = 3;
-        const int NETWORK_INDEX_YPOS = 4;
-        const int NETWORK_INDEX_COLOR = 5;
-        const int NETWORK_INDEX_ROTATION = 6;
-        const int NETWORK_INDEX_XORIGIN = 7;  // Added in the commit 5fc7cdd
-        const int NETWORK_INDEX_YORIGIN = 8;  // Added in the commit 5fc7cdd
-        const int NETWORK_INDEX_XSCALE = 9;   // Added in the commit 5fc7cdd
-        const int NETWORK_INDEX_YSCALE = 10;  // Added in the commit 5fc7cdd
+        const int NUM_DECIMALS_POSITION = 2;
+        const int NUM_DECIMALS_ROTATION = 2;
+        const int NUM_DECIMALS_SCALE = 2;
 
         //
         // Instance variables
@@ -65,7 +69,8 @@ namespace Minigame_Base
         protected GraphicsDeviceManager _graphics;
         protected SpriteBatch _spriteBatch;
 
-        private bool isServer;
+        // TODO: Maybe change to private
+        protected int clientNo;
         protected World world;
 
         // The dictionary of things in the game
@@ -80,6 +85,16 @@ namespace Minigame_Base
 
         protected List<Core.Timer> timers = new List<Core.Timer>();
 
+        protected List<KeyboardState?> keyboardStates;
+
+        // FPS-beräkning
+        int updateCounter;
+        int frameCounter;
+        protected int updateRate;
+        protected int frameRate;
+        TimeSpan updateElapsedTime;
+        TimeSpan frameElapsedTime;
+
         public MinigameBase()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -88,13 +103,19 @@ namespace Minigame_Base
 
             _graphics.PreferredBackBufferWidth = WINDOW_WIDTH;
             _graphics.PreferredBackBufferHeight = WINDOW_HEIGHT;
+
+            /* Turn off fixed timestep and vsync for stress tests.
+            IsFixedTimeStep = false;
+            _graphics.SynchronizeWithVerticalRetrace = false;
+            */
+
             _graphics.ApplyChanges();
         }
 
-        public void Run(bool isServer)
+        public void Run(int clientNo)
         {
-            Debug.WriteLine("MinigameBase Run called, isServer = " + isServer);
-            this.isServer = isServer;
+            Debug.WriteLine("MinigameBase Run called, clientNo = " + clientNo);
+            this.clientNo = clientNo;
             base.Run();
         }
 
@@ -110,58 +131,51 @@ namespace Minigame_Base
 
             InitializeTextureMap();
 
+            keyboardStates = new List<KeyboardState?>();
+
+            // TODO: Quick and dirty, just to see if the networking works. Remove!
+            keyboardStates.Add(null);
+            keyboardStates.Add(null);
+            keyboardStates.Add(null);
+            keyboardStates.Add(null);
+
+            int updateCounter = 0;
+            int frameCounter = 0;
+            int updateRate = 0;
+            int frameRate = 0;
+            updateElapsedTime = TimeSpan.Zero;
+            frameElapsedTime = TimeSpan.Zero;
+
             base.Initialize();
         }
 
         protected override void Update(GameTime gameTime)
-        {            
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+        {
+            if (Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
-                
-            foreach (KeyValuePair<int, Thing> kvp in things)
+
+            //UpdateFPS(gameTime);
+            updateCounter++;
+            UpdateFrequency(ref updateCounter, ref updateRate, ref updateElapsedTime, gameTime);
+
+            // Get an array of pressed keys
+            var pressedKeys = Keyboard.GetState().GetPressedKeys();
+
+            // Serialize the array to a string
+            string serializedKeys = string.Join(";", pressedKeys.Select(key => ((int)key).ToString("X")));
+
+            // TODO: Only sends keyboard input for now, not mouse and gamepad
+            var frameClientInput = serializedKeys + "#";
+
+            if (!IsServer())
             {
-                Thing thing = kvp.Value;
-
-                // Controls
-                switch (thing.controlType)
+                if (frameClientInput.Length > 1)
                 {
-                    case ControlType.None:
-                        break;
-                    case ControlType.UpDownLeftRight:
-                        ActOnUpDownLeftRightInput(thing);
-                        break;
-                    case ControlType.UpDown:
-                        ActOnUpDownInput(thing);
-                        break;
-                    case ControlType.LeftRight:
-                        ActOnLeftRightInput(thing);
-                        break;
-                    case ControlType.Custom:
-                        // Custom controls should be taken care of in the subclass
-                        break;
-                    default:
-                        Debug.WriteLine("Error: ControlType " + thing.controlType + " not supported (or NYI), exiting!");
-                        Exit();
-                        break;
+                    // Add timestamp at the beginning of the message
+                    string timestamp = System.DateTime.Now.ToString("HHmmss");
+                    frameClientInput = timestamp + "#"  + "K" + clientNo + ";"+ frameClientInput;
+                    SendClientInput(frameClientInput);
                 }
-
-                // Fix higher damping for lower speeds
-                //thing.body.LinearDamping = thing.baseLinearDamping;
-                //dampingConstant + dampingVelocityDependencyFactor / body.LinearVelocity
-                thing.SetAdjustedLinearDamping();
-
-                // Simulate an impulse that makes the surface seem concave
-                // First horizontal force
-                float midLine = 18.8f;
-                float distFromMidLine = thing.body.Position.X;
-                float forceToMiddle = distFromMidLine - midLine;
-                thing.body.ApplyLinearImpulse(new Vector2(-forceToMiddle * HORIZONTAL_FORCE_TO_MIDDLE_FACTOR, 0));
-
-                // Then vertical force
-                midLine = 8.0f;
-                distFromMidLine = thing.body.Position.Y;
-                forceToMiddle = distFromMidLine - midLine;
-                thing.body.ApplyLinearImpulse(new Vector2(0, -forceToMiddle * VERTICAL_FORCE_TO_MIDDLE_FACTOR));
             }
 
             // Update all timers that the minigame has added
@@ -175,9 +189,12 @@ namespace Minigame_Base
 
         protected override void Draw(GameTime gameTime)
         {
+            frameCounter++;
+            UpdateFrequency(ref frameCounter, ref frameRate, ref frameElapsedTime, gameTime);
+
             _spriteBatch.Begin();
 
-            if (isServer)
+            if (IsServer())
             {
                 string frameDrawData = "";
 
@@ -206,51 +223,68 @@ namespace Minigame_Base
 
                     frameDrawData += thingDrawData;
                 }
-                PolyNetworking.Networking.SendDrawData(frameDrawData);
+
+                if (frameDrawData.Length > 0)
+                {
+                    // Add timestamp at the beginning of the message
+                    string timestamp = System.DateTime.Now.ToString("HHmmss");
+                    frameDrawData = timestamp + "#" + frameDrawData;
+
+                    //Debug.WriteLine("Sending frameDrawData: " + frameDrawData);
+                    PolyNetworking.Networking.SendDrawData(frameDrawData);
+                }
             }
             else
             {
                 // Get the latest drawData that has been received from the server
                 string drawData = PolyNetworking.Networking.GetReceivedDrawData();
 
-                // Split the drawData string into an array of things
-                string[] thingStrings = drawData.Split(OBJECT_SEPARATOR);
-
-                // Loop over the thing drawData strings
-                foreach (string thingString in thingStrings)
+                if (drawData is not null && drawData.Length > 0)
                 {
-                    if (thingString.Length == 0)
-                        continue;
+                    // Split the drawData string into an array of things
+                    string[] thingStrings = drawData.Split(OBJECT_SEPARATOR);
+                    bool isFirstPart = true;  // A flag to check if it's the first part
 
-                    // Split thing into an array of values
-                    string[] valueStrings = thingString.Split(FIELD_SEPARATOR);
+                    foreach (string thingString in thingStrings)
+                    {
+                        if (thingString.Length == 0)
+                            continue;
 
-                    string timestamp = valueStrings[NETWORK_INDEX_TIMESTAMP];
-                    // TODO: Remove, now using GetTexture instead
-                    //Texture2D tex = IndexToTexture(int.Parse(valueStrings[NETWORK_INDEX_TEXTURE_INDEX]));
-                    Texture2D tex = GetTexture(int.Parse(valueStrings[NETWORK_INDEX_TEXTURE_INDEX]));
-                    Vector2 scrPos = new Vector2(float.Parse(valueStrings[NETWORK_INDEX_XPOS]),
-                                                 float.Parse(valueStrings[NETWORK_INDEX_YPOS]));
-                    Color color = HexToColor(valueStrings[NETWORK_INDEX_COLOR]);
-                    float rotation = float.Parse(valueStrings[NETWORK_INDEX_ROTATION]);
-                    Vector2 origin = new Vector2(float.Parse(valueStrings[NETWORK_INDEX_XORIGIN]),
-                                                 float.Parse(valueStrings[NETWORK_INDEX_YORIGIN]));
-                    Vector2 scale = new Vector2(float.Parse(valueStrings[NETWORK_INDEX_XSCALE]),
-                                                float.Parse(valueStrings[NETWORK_INDEX_YSCALE]));
+                        if (isFirstPart)
+                        {
+                            // Handle timestamp
+                            string receivedTimestamp = thingString;
+                            isFirstPart = false;
+                            continue;
+                        }
 
-                    _spriteBatch.Draw(texture: tex,
-                                               position: scrPos,
-                                               sourceRectangle: new Rectangle(0, 0, tex.Width, tex.Height),
-                                               color: color,
-                                               rotation: -rotation,
-                                               origin: origin,
-                                               scale: scale,
-                                               effects: SpriteEffects.None,
-                                               layerDepth: 0.0f);
+                        // Split thing into an array of values
+                        string[] valueStrings = thingString.Split(FIELD_SEPARATOR);
 
-                    // Log the drawData strings
-                    foreach (string valueString in valueStrings)
-                        Debug.WriteLine("Next valueString: " + valueString);
+                        Texture2D tex = GetTexture(int.Parse(valueStrings[DRAWDATA_INDEX_TEXTURE_INDEX]));
+                        Vector2 scrPos = new Vector2(float.Parse(valueStrings[DRAWDATA_INDEX_XPOS]),
+                                                     float.Parse(valueStrings[DRAWDATA_INDEX_YPOS]));
+                        Color color = HexToColor(valueStrings[DRAWDATA_INDEX_COLOR]);
+                        float rotation = float.Parse(valueStrings[DRAWDATA_INDEX_ROTATION]);
+                        Vector2 origin = new Vector2(float.Parse(valueStrings[DRAWDATA_INDEX_XORIGIN]),
+                                                     float.Parse(valueStrings[DRAWDATA_INDEX_YORIGIN]));
+                        Vector2 scale = new Vector2(float.Parse(valueStrings[DRAWDATA_INDEX_XSCALE]),
+                                                    float.Parse(valueStrings[DRAWDATA_INDEX_YSCALE]));
+
+                        _spriteBatch.Draw(texture: tex,
+                                                   position: scrPos,
+                                                   sourceRectangle: new Rectangle(0, 0, tex.Width, tex.Height),
+                                                   color: color,
+                                                   rotation: -rotation,
+                                                   origin: origin,
+                                                   scale: scale,
+                                                   effects: SpriteEffects.None,
+                                                   layerDepth: 0.0f);
+
+                        // Log the drawData strings
+                        foreach (string valueString in valueStrings)
+                            Debug.WriteLine("Next valueString: " + valueString);
+                    }
                 }
             }
             _spriteBatch.End();
@@ -258,7 +292,141 @@ namespace Minigame_Base
             base.Draw(gameTime);
         }
 
+        protected bool IsServer()
+        {
+            return clientNo == 0;
+        }
 
+        private void UpdateFrequency(ref int counter, ref int rate, ref TimeSpan elapsedTime, GameTime gameTime)
+        {
+            elapsedTime += gameTime.ElapsedGameTime;
+
+            if (elapsedTime > TimeSpan.FromSeconds(1))
+            {
+                elapsedTime -= TimeSpan.FromSeconds(1);
+                rate = counter;
+                counter = 0;
+            }
+        }
+
+        protected void PrepareUserInput()
+        {
+            // Get "real" triples for the server player
+            KeyboardState keyboardState = Keyboard.GetState();
+            MouseState mouseState = Mouse.GetState();
+            GamePadState gamePadState = GamePad.GetState(PlayerIndex.One);
+
+            // TODO: Quick and dirty, just to see if the networking works. Remove!
+            keyboardStates[clientNo] = keyboardState;
+
+            // Create "fake" triples based on received client data
+            KeyboardState? kState = DeserializeAndProcessNetworkInput();
+
+        }
+
+        private KeyboardState? DeserializeAndProcessNetworkInput()
+        {
+            KeyboardState? kState = null;
+            int clientNoOfInput = -1;
+
+            // Get network data
+            string networkData = PolyNetworking.Networking.GetReceivedClientsInput();
+
+            // If there is no network data to process, return
+            if (networkData.Length == 0)
+                return kState;
+
+            // Split the network data into an array of strings
+            string[] networkDataArray = networkData.Split('#');
+
+            bool isFirstPart = true;
+
+            foreach (string data in networkDataArray)
+            {
+                if (isFirstPart)
+                {
+                    // Handle timestamp
+                    string receivedTimestamp = data;
+                    isFirstPart = false;
+                    continue;
+                }
+
+                // Split the string into an array of values
+                string[] values = data.Split(';');
+
+                string specifier = values[0];
+
+                // If there is no data, skip to the next iteration
+                if (data.Length == 0)
+                    continue;
+
+                // If the specifier is "K" (for Keyboard), process keyboard data
+                if (specifier[0] == 'K')
+                {
+                    clientNoOfInput = int.Parse(specifier.Substring(1, 1));
+
+                    // Get the keyboard data
+                    string keys = values[1];
+
+                    // Create a HashSet<Keys> to store the pressed keys
+                    HashSet<Keys> pressedKeys = new HashSet<Keys>();
+
+                    for (int i = 0; i < keys.Length; i += 2)
+                    {
+                        // Convert the hex pair to a key and add it to the HashSet
+                        Keys k = (Keys)int.Parse(keys.Substring(i, 2), System.Globalization.NumberStyles.HexNumber);
+                        pressedKeys.Add(k);
+                    }
+
+                    // Create a KeyboardState object based on the pressed keys
+                    // TODO: Does ToArray() mean that we lose the performance benefits of a HashSet?
+                    kState = new KeyboardState(pressedKeys.ToArray());
+
+                    // Add the KeyboardState object to the list
+                    keyboardStates[clientNoOfInput] = kState;
+                }
+            }
+            return kState;
+        }
+
+        void SendClientInput(string cInput)
+        {
+            PolyNetworking.Networking.SendClientInput(cInput);
+        }
+
+        string GetClientInput()
+        {
+            string clientInput = "";
+
+            // Hämta aktuell GamePadState
+            GamePadState state = GamePad.GetState(PlayerIndex.One);
+
+            // Serialize gamepad buttons
+            //Debug.WriteLine("Buttons.hashCode: " + state.Buttons.GetHashCode());
+            var gamepadButtonHashCode = state.Buttons.GetHashCode();
+
+            // Timestamp
+            string timestamp = DateTime.Now.ToString("HHmmss");
+
+            return clientInput;
+        }
+
+        (KeyboardState?, MouseState?, GamePadState?) GetTripleState()
+        {
+            return (null, null, null);
+        }
+
+        protected string FormatValue(float value, int numDecimals)
+        {
+            // Round to specified number of decimals
+            string formatted = value.ToString($"F{numDecimals}");
+
+            // Remove unnecessary zeros and commas
+            // Reverse index search from the end to remove zeros after the decimal point
+            formatted = formatted.TrimEnd('0').TrimEnd(',');
+
+            return formatted;
+        }
 
         protected string ThingToDrawData(Thing thing)
         {
@@ -269,22 +437,24 @@ namespace Minigame_Base
                                          thing.drawTintGreen,
                                          thing.drawTintBlue);
 
+            string formattedX = FormatValue(scrPos.X, NUM_DECIMALS_POSITION);
+            string formattedY = FormatValue(scrPos.Y, NUM_DECIMALS_POSITION);
+            string formattedRotation = FormatValue(thing.body.Rotation, NUM_DECIMALS_ROTATION);
+            string formattedScaleX = FormatValue(thing.scale.X, NUM_DECIMALS_SCALE);
+            string formattedScaleY = FormatValue(thing.scale.Y, NUM_DECIMALS_SCALE);
+
             string str = SPECIFIER_THING + ";" +
-                         timestamp + ";" +
-                         // TODO: Remove, now using GetTextureIndex instead
-                         //TextureToIndex(thing.tex) + ";" +
                          GetTextureIndex(thing.tex.Name) + ";" +
-                         scrPos.X + ";" + scrPos.Y + ";" +
+                         formattedX + ";" + formattedY + ";" +
                          colorHex + ";" +
-                         thing.body.Rotation + ";" +
+                         formattedRotation + ";" +
                          thing.origin.X + ";" +
                          thing.origin.Y + ";" +
-                         thing.scale.X + ";" +
-                         thing.scale.Y + "#";
+                         formattedScaleX + ";" + formattedScaleY + "#";
 
-            Debug.WriteLine("ThingToDrawData: " + str);
             return str;
         }
+
 
         // Mapping functions for textures
         //   int GetTextureIndex(Texture2D texture)    SKIP
@@ -308,12 +478,10 @@ namespace Minigame_Base
             return textures[textureIndex];
         }
 
-
         public static string ColorToHex(int alpha, int red, int green, int blue)
         {
             return alpha.ToString("X2") + red.ToString("X2") + green.ToString("X2") + blue.ToString("X2");
         }
-
 
         public static Color HexToColor(string hex)
         {
@@ -330,36 +498,23 @@ namespace Minigame_Base
             return new Color(red, green, blue, alpha);
         }
 
-
-
-    protected void InitializeTextureMap() {
+        protected void InitializeTextureMap()
+        {
             string rootDirectory = Content.RootDirectory;
-
-            // Beräknar den fullständiga sökvägen till 'Content'-mappen baserat på den aktuella arbetskatalogen.
             string contentFullPath = System.Environment.CurrentDirectory + "/" + rootDirectory;
 
+            // Build a mapping between texture indices and texture names
             var textureMapping = BuildTextureMapping(rootDirectory);
-
-            foreach (var item in textureMapping)
-            {
-                Debug.WriteLine($"Next key/item: {item.Key}: {item.Value}");
-            }
         }
-
         
         static Dictionary<int, string> BuildTextureMapping(string rootDirectory)
         {
-            Debug.WriteLine("BuildTextureMapping called with rootDirectory: " + rootDirectory);
             var textureFiles = Directory.GetFiles(rootDirectory, "*.xnb", SearchOption.AllDirectories);
-            Debug.WriteLine("BuildTextureMapping: textureFiles.Length: " + textureFiles.Length);
-
             var mapping = new Dictionary<int, string>();
 
             int index = 0;
             foreach (var filePath in textureFiles)
             {
-                // Här kan du välja att använda den fullständiga sökvägen eller bara en relativ del av den
-                // Beroende på dina behov. Exemplet nedan använder den relativa sökvägen från rootDirectory.
                 string relativePath = Path.GetRelativePath(rootDirectory, filePath);
 
                 // Replace backslashes with forward slashes
@@ -372,133 +527,23 @@ namespace Minigame_Base
             return mapping;
         }
 
-
-
-
-        /*
-        // BAD, static: New version, expects only "Content"
-        static Dictionary<int, string> BuildTextureMapping(string contentFolderName)
-        {
-            // Antag att Content-mappen ligger i samma katalog som den körbara applikationen.
-            string rootDirectory = Path.Combine(Environment.CurrentDirectory, contentFolderName);
-
-            // Kontrollera om den uträknade sökvägen existerar
-            if (!Directory.Exists(rootDirectory))
-            {
-                Console.WriteLine($"Kunde inte hitta '{rootDirectory}'. Kontrollera att du har angivit rätt plats för Content-mappen.");
-                return new Dictionary<int, string>();
-            }
-
-            var textureFiles = Directory.GetFiles(rootDirectory, "*.xnb", SearchOption.AllDirectories);
-            var mapping = new Dictionary<int, string>();
-
-            int index = 0;
-            foreach (var filePath in textureFiles)
-            {
-                // Tar bort '.xnb'-ändelsen och använder den relativa sökvägen från 'rootDirectory'
-                string relativePath = Path.GetRelativePath(rootDirectory, filePath);
-                relativePath = Path.ChangeExtension(relativePath, null); // Tar bort .xnb-filändelsen
-
-                mapping.Add(index, relativePath);
-                index++;
-            }
-
-            return mapping;
-        }
-        */
-
-
         static Dictionary<int, string> BuildIndexMapping(string rootDirectory)
         {
             var files = Directory.GetFiles(rootDirectory, "*.*", SearchOption.AllDirectories)
-                        .Select(filePath => Path.GetRelativePath(rootDirectory, filePath)) // Gör sökvägar relativa
-                        .OrderBy(name => name) // Sortera alfabetiskt
+                        .Select(filePath => Path.GetRelativePath(rootDirectory, filePath)) // Make paths relative
+                        .OrderBy(name => name) // Sort alphabetically
                         .ToList();
 
             var indexMapping = new Dictionary<int, string>();
 
             for (int i = 0; i < files.Count; i++)
             {
-                string nameWithoutExtension = Path.ChangeExtension(files[i], null); // Tar bort .xnb-filändelsen
+                string nameWithoutExtension = Path.ChangeExtension(files[i], null); // Remove .xnb file suffix
                 indexMapping[i] = nameWithoutExtension.Replace('\\', '/');
             }
 
             return indexMapping;
         }
-
-
-        protected void ActOnUpDownLeftRightInput(Thing thing)
-        {
-            // Inspiration for flexible keys
-            //void ActOnInput(Player p, Keys lKey, Keys rKey, Keys jumpKey, PlayerIndex padPlrIx)
-
-            // Walk up
-            if (thing.body.LinearVelocity.Y > -MAX_WALK_SPEED &&
-                Keyboard.GetState().IsKeyDown(Keys.Up))
-                thing.body.ApplyLinearImpulse(new Vector2(0, SIDE_IMPULSE));
-
-            // Walk down
-            if (thing.body.LinearVelocity.Y < MAX_WALK_SPEED &&
-                Keyboard.GetState().IsKeyDown(Keys.Down))
-                thing.body.ApplyLinearImpulse(new Vector2(0, -SIDE_IMPULSE));
-
-            // Walk left
-            if (thing.body.LinearVelocity.X > -MAX_WALK_SPEED &&
-                Keyboard.GetState().IsKeyDown(Keys.Left))
-                thing.body.ApplyLinearImpulse(new Vector2(-SIDE_IMPULSE, 0));
-
-            // Walk right
-            if (thing.body.LinearVelocity.X < MAX_WALK_SPEED &&
-                Keyboard.GetState().IsKeyDown(Keys.Right))
-                thing.body.ApplyLinearImpulse(new Vector2(SIDE_IMPULSE, 0));
-        }
-
-        protected void ActOnUpDownInput(Thing thing)
-        {
-            // Walk up
-            if (thing.body.LinearVelocity.Y > -MAX_WALK_SPEED &&
-                Keyboard.GetState().IsKeyDown(Keys.Up))
-                thing.body.ApplyLinearImpulse(new Vector2(0, SIDE_IMPULSE));
-
-            // Walk down
-            if (thing.body.LinearVelocity.Y < MAX_WALK_SPEED &&
-                Keyboard.GetState().IsKeyDown(Keys.Down))
-                thing.body.ApplyLinearImpulse(new Vector2(0, -SIDE_IMPULSE));
-        }
-
-        void ActOnLeftRightInput(Thing thing)
-        {
-            // Inspiration for flexible keys
-            //void ActOnInput(Player p, Keys lKey, Keys rKey, Keys jumpKey, PlayerIndex padPlrIx)
-
-            // Walk left
-            if (thing.body.LinearVelocity.X > -MAX_WALK_SPEED &&
-                Keyboard.GetState().IsKeyDown(Keys.Left))
-                thing.body.ApplyLinearImpulse(new Vector2(-SIDE_IMPULSE, 0));
-            
-            // Walk right
-            if (thing.body.LinearVelocity.X < MAX_WALK_SPEED &&
-                Keyboard.GetState().IsKeyDown(Keys.Right))
-                thing.body.ApplyLinearImpulse(new Vector2(SIDE_IMPULSE, 0));
-        }
-
-        /*
-        protected void ActOnUpInput(Thing thing)
-        {
-            // Walk up
-            if (thing.body.LinearVelocity.Y > -MAX_WALK_SPEED &&
-                Keyboard.GetState().IsKeyDown(Keys.Up))
-                thing.body.ApplyLinearImpulse(new Vector2(0, SIDE_IMPULSE));
-        }
-
-        protected void ActOnDownInput(Thing thing)
-        {
-            // Walk down
-            if (thing.body.LinearVelocity.Y < MAX_WALK_SPEED &&
-                Keyboard.GetState().IsKeyDown(Keys.Down))
-                thing.body.ApplyLinearImpulse(new Vector2(0, -SIDE_IMPULSE));
-        }
-        */
 
         protected void LoadLevel(string contentFolder, string levelFolder)
         {
@@ -506,10 +551,7 @@ namespace Minigame_Base
             // This dictionary is needed for a while, until it's time to build the shapes
             var collidersDataDict = new Dictionary<string, Core.CollidersData>();
             var allContentFiles = Directory.GetFiles(contentFolder + "/" + levelFolder, "*.*", SearchOption.AllDirectories);
-
-            // Använd LINQ för att ersätta alla "\" med "/" i varje sökväg.
             var normalizedPaths = allContentFiles.Select(path => path.Replace("\\", "/")).ToArray();
-
 
             // Load content files for pictures, colliders, and level
             foreach (var file in normalizedPaths)
@@ -528,15 +570,11 @@ namespace Minigame_Base
                 // Pictures (.png, .jpg etc) have been build into .xnb using the MGCB (MonoGame Content Builder) tool
                 if (extension == ".xnb")
                 {
-                    
-                    //if (file.Contains("/Pictures/") || file.Contains("\\Pictures\\"))
                     if (assetPath.Contains("/Pictures/") || assetPath.Contains("\\Pictures\\"))
                     {
                         var texture = Content.Load<Texture2D>(assetPath);
                         Debug.WriteLine("Loaded texture: " + assetPath);
                     }
-
-                    // Add code for loading sound assets etc here.
 
                 }
                 // Handle .json files directly, they are not built to .xnb files
@@ -560,8 +598,6 @@ namespace Minigame_Base
             BuildLevel(loadedLevel);
         }
 
-
-        // TODO: 
         void BuildColliderShapes(Dictionary<string, Core.CollidersData> collidersDataDict)
         {
             foreach (var objName in collidersDataDict.Keys)
@@ -586,7 +622,7 @@ namespace Minigame_Base
 
         void BuildLevel(LevelData loadedLevel)
         {
-            // Loopa över alla GroundTiles i den laddade LevelData
+            // Loop over all GroundTiles in the loaded LevelData
             foreach (var tile in loadedLevel.GroundTiles)
                 AddLevelThing(tile.TileName, tile.Position.ToVector2() /**/ + TILE_OFFSET /**/, 0.0f);
         }
@@ -617,16 +653,11 @@ namespace Minigame_Base
 
         public void AddThing(Thing thing)
         {
-            Debug.WriteLine("AddThing called, thingId=" + thing.id + ", textureId = " + nextTextureId + ", textures.Count: " + textures.Count);
-
             things.Add(thing.id, thing);
-            //if (GetTextureName(thing.tex) == null)
             if (!textures.ContainsValue(thing.tex))
-            {
                 textures.Add(nextTextureId++, thing.tex);
-                Debug.WriteLine("Added texture with textureId: " + (nextTextureId - 1) + ", textures.Count: " + textures.Count);
-            }
         }
+
         public void RemoveThing(Thing thing)
         {
             world.Remove(thing.body);
@@ -637,7 +668,6 @@ namespace Minigame_Base
         {
             return things[id];
         }
-
 
         Vector2 ToScrPos(Vector2 physPos)
         {
@@ -660,7 +690,6 @@ namespace Minigame_Base
             return timer;
         }
 
-
         //
         // Inner classes
         //
@@ -673,10 +702,8 @@ namespace Minigame_Base
             public Texture2D tex;
             public bool isVisible;
             public bool hasFallen;
-            public ControlType controlType;
             public float baseLinearDamping;
             public float extraLinearDamping;
-            //public Color drawColor;
             public Vector2 origin;
             public Vector2 scale;
             public int drawTintAlpha;
@@ -685,7 +712,6 @@ namespace Minigame_Base
             public int drawTintBlue;
 
             public Thing(World world,
-                         //int id,
                          Texture2D tex,
                          Vector2 pos,
                          BodyType bodyType,
@@ -699,9 +725,6 @@ namespace Minigame_Base
                          float angularDamping = DEFAULT_ANGULAR_DAMPING,
                          float friction = DEFAULT_FRICTION,
                          float restitution = DEFAULT_RESTITUTION,
-                         Minigame_Base.ControlType ctrlType = ControlType.None,
-                         //Color drawColor = DEFAULT_TINT
-                         //Color drawColor = new Color(255, 255, 255)
                          float rot = 0.0f,
                          float originX = 0.0f,
                          float originY = 0.0f,
@@ -746,9 +769,7 @@ namespace Minigame_Base
                 this.group = group;
 
                 this.tex = tex;
-                //b.SetIsSensor(isSensor);
                 SetIsSensor(b, isSensor);
-                
 
                 this.baseLinearDamping = baseLinearDamping;
                 this.extraLinearDamping = extraLinearDamping;
@@ -756,13 +777,10 @@ namespace Minigame_Base
                 SetFriction(b, friction);
                 SetRestitution(b, restitution);
                 this.body = b;
-                this.SetAdjustedLinearDamping();
 
                 this.origin = new Vector2(originX, originY);
                 this.scale = new Vector2(scaleX, scaleY);
 
-                this.controlType = ctrlType;
-                //this.drawColor = drawColor;
                 this.drawTintAlpha = drawTintAlpha;
                 this.drawTintRed = drawTintRed;
                 this.drawTintGreen = drawTintGreen;
@@ -777,16 +795,6 @@ namespace Minigame_Base
                 ret += "pos: " + body.Position + "\n";
                 return ret;
             }
-
-            public void SetAdjustedLinearDamping()
-            {
-                // Avoid division by zero
-                if (body.LinearVelocity.Length() == 0.0f)
-                    body.LinearDamping = baseLinearDamping;
-                else
-                    body.LinearDamping = baseLinearDamping + extraLinearDamping / body.LinearVelocity.Length();
-            }
-
         }
 
         static void SetIsSensor(Body b, bool value)
@@ -806,7 +814,6 @@ namespace Minigame_Base
             foreach (var fixture in b.FixtureList)
                 fixture.Restitution = value;
         }
-
     }
 
     public class LevelData
@@ -819,7 +826,6 @@ namespace Minigame_Base
     public class TileData
     {
         public Position Position { get; set; }
-        //public Vector2 Position { get; set; }
         public string TileName;
     }
 
@@ -829,8 +835,7 @@ namespace Minigame_Base
         public float y { get; set; }
         public float z { get; set; }
 
-        // Konverterar Position till MonoGame's Vector2
-        //public Vector3 ToVector3() => new Vector3(x, y, z);
+        // Converts Position to MonoGame's Vector2
         public Vector2 ToVector2() => new Vector2(x, y);
     }
 
@@ -846,21 +851,10 @@ namespace Minigame_Base
         }
     }
 
-    public enum ControlType
-    {
-        None,
-        UpDownLeftRight,
-        UpDown,
-        LeftRight,
-        LeftRightJump,
-        Custom
-    }
-
     public enum BodyShape
     {
         Rectangle,
         Circle,
         Custom
     }
-
 }

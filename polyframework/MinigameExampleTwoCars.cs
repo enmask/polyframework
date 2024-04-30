@@ -93,17 +93,14 @@ namespace polyframework
 
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
+            // Get the server user input from keyboard etc, and the client user input from the network.
+            PrepareUserInput();
 
-            // TEST, just to see if the networking works
-            if (Keyboard.GetState().IsKeyDown(Keys.X))
-                PolyNetworking.Networking.SendDrawData("Test send draw data (X)");
-            if (Keyboard.GetState().IsKeyDown(Keys.C))
-                PolyNetworking.Networking.SendClientInput("Test send client input (C)");
-
-            foreach (Thing plr in players)
-                ApplyUserInput(plr);
+            if (IsServer())
+            {
+                foreach (Thing plr in players)
+                    ApplyUserInput(plr);
+            }
 
             base.Update(gameTime);
         }
@@ -115,6 +112,10 @@ namespace polyframework
             // We don't need to draw the things, because the base.Draw call takes care of that,
             // but let's draw some text info.
             _spriteBatch.Begin();
+
+            // Draw the FPS (framerate) and update rate
+            _spriteBatch.DrawString(font, $"FPS: {frameRate}       Update rate: {updateRate}", new Vector2(170, 110), Color.White);
+
             // Make a nice string...
             string posStr = "Car 1 x: " + Round(plr1.body.Position.X, 1) +
                             "      y: " + Round(plr1.body.Position.Y, 1);
@@ -145,6 +146,8 @@ namespace polyframework
         // Returns true if the action is active for a player
         bool IsActionActive(string action, Thing plr)
         {
+            KeyboardState? keyboardState = null;
+
             for (int plrIx = 0; plrIx < players.Count; plrIx++)
             {
                 if (plr == players[plrIx])
@@ -155,9 +158,23 @@ namespace polyframework
                             switch (plrIx)
                             {
                                 case 0:
-                                    return Keyboard.GetState().IsKeyDown(Keys.Up);   // Player 1 accelerate
+                                    keyboardState = keyboardStates[plrIx];
+                                    if (keyboardState != null)
+                                    {
+                                        bool isKeyDown = (bool)keyboardState?.IsKeyDown(Keys.Up);   // Player 1 accelerate
+                                        return isKeyDown;
+                                    }
+                                    else
+                                        return false;
                                 case 1:
-                                    return Keyboard.GetState().IsKeyDown(Keys.W);    // Player 2 accelerate
+                                    keyboardState = keyboardStates[plrIx];
+                                    if (keyboardState != null)
+                                    {
+                                        bool isKeyDown = (bool)keyboardState?.IsKeyDown(Keys.Up);   // Player 2 accelerate
+                                        return isKeyDown;
+                                    }
+                                    else
+                                        return false;
                                 default:
                                     return false;
                             }

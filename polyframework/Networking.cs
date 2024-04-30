@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Net;
 using System.Text;
 using System.Threading;
+using System.Collections.Concurrent;
 
 
 // Usage:
@@ -15,8 +16,8 @@ using System.Threading;
 
 // Client input:
 // 1. Have each client call SendClientInput() in Update() to send its player input to the network.
-// 2. Have each client call AddReceivedClientInput() to store new input data as it's received from the network.
-// 3. Have each client call GetClientsInput() to get all player input data that has been received from the network
+// 2. Have the server call AddReceivedClientInput() to store new input data as it's received from the network.
+// 3. Have the server call GetClientsInput() to get all player input data that has been received from the network
 //    since the last call to GetClientsInput().
 //    Note the 's' in GetClientsInput(), which indicates that there can be input from multiple clients.
 
@@ -26,6 +27,7 @@ namespace PolyNetworking
     public class Networking
     {
         private static bool isServer;
+        private static bool networkIsAvailable = false;
 
         // TODO: Don't hard code IPv4 addess and subnet mask. Instead, get them from the system or ask the user for them.
         // Below values were found by:
@@ -38,7 +40,8 @@ namespace PolyNetworking
         private const int CLIENTSINPUT_PORT = 11002;
 
         private static IPAddress BROADCAST_ADDRESS = CalculateBroadcastAddress(IPAddress.Parse(IPv4_ADDRESS), IPAddress.Parse(SUBNET_MASK));
-        private static string drawData = "";
+        //private static string drawData = "";
+        private static ConcurrentQueue<string> drawData = new ConcurrentQueue<string>();
         private static string clientsInput = "";
         private static Socket socket;
         private static IPEndPoint ep;
@@ -46,6 +49,13 @@ namespace PolyNetworking
         public static void StartNetworking(bool isServer)
         {
             Networking.isServer = isServer;
+
+            if (!networkIsAvailable)
+            {
+                Debug.WriteLine("Nätverk är inte tillgängligt.");
+                return;
+            }
+
             var listenThread = new Thread(Listener);
             listenThread.Name = "NetworkListener";
             // Make the listener a background thread, so it will die when the main thread dies.
@@ -63,40 +73,69 @@ namespace PolyNetworking
                 ep = new IPEndPoint(BROADCAST_ADDRESS, CLIENTSINPUT_PORT);
         }
 
+        private static void CheckNetworkAvailability()
+        {
+            try
+            {
+                // Test connection to the broadcast address
+                using (var tempSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp))
+                {
+                    tempSocket.Connect(new IPEndPoint(BROADCAST_ADDRESS, DRAWDATA_PORT));
+                    networkIsAvailable = true;
+                }
+            }
+            catch (SocketException)
+            {
+                networkIsAvailable = false;
+            }
+        }
+
+
         public static void SendDrawData(string dData)
         {
+            Debug.WriteLine("SendDrawData called with: <" + dData + ">");
+
+            if (!networkIsAvailable)
+            {
+                Debug.WriteLine("Försöker sända data när nätverket inte är tillgängligt.");
+                return;
+            }
+
+            Debug.WriteLine("SendDrawData sends: <" + dData + ">");
             byte[] sendbuf = Encoding.UTF8.GetBytes(dData);
             socket.SendTo(sendbuf, ep);
         }
 
-        public static void SendClientInput(string dData)
+        public static void SendClientInput(string cInput)
         {
-            byte[] sendbuf = Encoding.UTF8.GetBytes(dData);
+            byte[] sendbuf = Encoding.UTF8.GetBytes(cInput);
             socket.SendTo(sendbuf, ep);
         }
 
         public static void SetReceivedDrawData(string dData)
         {
-            drawData = dData;
+            drawData.Enqueue(dData);
         }
         
-        public static void AddReceivedClientInput(string dData)
+        public static void AddReceivedClientInput(string cInput)
         {
-            drawData += dData;
+            clientsInput += cInput;
         }
 
         public static string GetReceivedDrawData()
         {
-            string s = drawData;
-            // The drawData is now consumed, and should not be gotten again.
-            drawData = "";
-            return s;
+            string latestData = null;
+            string data = null;
+
+            // Empties the queue until the last element
+            while (drawData.TryDequeue(out data))
+                latestData = data;
+
+            return latestData;
         }
 
         public static string GetReceivedClientsInput()
         {
-            Debug.WriteLine("GetReceivedClientsInput gets (and clears): <" + clientsInput + ">");
-
             string s = clientsInput;
             // The clientsInput is now consumed, and should not be gotten again.
             clientsInput = "";
@@ -105,7 +144,6 @@ namespace PolyNetworking
 
         static void Listener()
         {
-            Debug.WriteLine("Listener called");
             UdpClient listener;
             if (isServer)
                 listener = new UdpClient(CLIENTSINPUT_PORT);
