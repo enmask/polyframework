@@ -93,15 +93,12 @@ namespace PolyNetworking
 
         public static void SendDrawData(string dData)
         {
-            Debug.WriteLine("SendDrawData called with: <" + dData + ">");
-
             if (!networkIsAvailable)
             {
-                Debug.WriteLine("Försöker sända data när nätverket inte är tillgängligt.");
+                //Debug.WriteLine("Försöker sända data när nätverket inte är tillgängligt.");
                 return;
             }
 
-            Debug.WriteLine("SendDrawData sends: <" + dData + ">");
             byte[] sendbuf = Encoding.UTF8.GetBytes(dData);
             socket.SendTo(sendbuf, ep);
         }
