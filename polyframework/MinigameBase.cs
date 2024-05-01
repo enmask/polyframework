@@ -151,8 +151,14 @@ namespace Minigame_Base
 
         protected override void Update(GameTime gameTime)
         {
+            Core.Tools.Log("\nTime: " + System.DateTime.Now.ToString("HHmmssfff") + "  Update START (isServer=" + IsServer() + ")" +
+                           ", updateCounter = " + updateCounter + ", frameCounter = " + frameCounter);
+
             if (Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
+
+            if (Keyboard.GetState().IsKeyDown(Keys.L))
+                Core.Tools.WriteLogListToFile();
 
             //UpdateFPS(gameTime);
             updateCounter++;
@@ -185,10 +191,16 @@ namespace Minigame_Base
             world.Step((float)gameTime.ElapsedGameTime.TotalSeconds * 1.0f);
 
             base.Update(gameTime);
+
+            Core.Tools.Log("Time: " + System.DateTime.Now.ToString("HHmmssfff") + "  Update END (isServer=" + IsServer() + ")" +
+                           ", updateCounter = " + updateCounter + ", frameCounter = " + frameCounter + "\n");
         }
 
         protected override void Draw(GameTime gameTime)
         {
+            Core.Tools.Log("\nTime: " + System.DateTime.Now.ToString("HHmmssfff") + "  Draw START (isServer=" + IsServer() + ")" +
+                  ", updateCounter = " + updateCounter + ", frameCounter = " + frameCounter);
+
             frameCounter++;
             UpdateFrequency(ref frameCounter, ref frameRate, ref frameElapsedTime, gameTime);
 
@@ -221,6 +233,9 @@ namespace Minigame_Base
                     // The clients will also want to draw the things, so send draw data to them
                     string thingDrawData = ThingToDrawData(thing);
 
+                    Core.Tools.Log("Time: " + System.DateTime.Now.ToString("HHmmssfff") +
+                                   "  Draw: Server draws (and will send thingString: <" + thingDrawData + ">)");
+
                     frameDrawData += thingDrawData;
                 }
 
@@ -230,7 +245,7 @@ namespace Minigame_Base
                     string timestamp = System.DateTime.Now.ToString("HHmmssfff");
                     frameDrawData = timestamp + "#" + frameDrawData;
 
-                    //Debug.WriteLine("Sending frameDrawData: " + frameDrawData);
+                    Debug.WriteLine("Server sending frameDrawData: " + frameDrawData);
                     PolyNetworking.Networking.SendDrawData(frameDrawData);
                 }
             }
@@ -271,6 +286,9 @@ namespace Minigame_Base
                         Vector2 scale = new Vector2(float.Parse(valueStrings[DRAWDATA_INDEX_XSCALE]),
                                                     float.Parse(valueStrings[DRAWDATA_INDEX_YSCALE]));
 
+                        Core.Tools.Log("Time: " + System.DateTime.Now.ToString("HHmmssfff") +
+                                       "  Draw: Client draws according to thingString: <" + thingString + ">");
+
                         _spriteBatch.Draw(texture: tex,
                                                    position: scrPos,
                                                    sourceRectangle: new Rectangle(0, 0, tex.Width, tex.Height),
@@ -290,6 +308,9 @@ namespace Minigame_Base
             _spriteBatch.End();
 
             base.Draw(gameTime);
+
+            Core.Tools.Log("Time: " + System.DateTime.Now.ToString("HHmmssfff") + "  Draw END (isServer=" + IsServer() + ")" +
+                           ", updateCounter = " + updateCounter + ", frameCounter = " + frameCounter + "\n");
         }
 
         protected bool IsServer()

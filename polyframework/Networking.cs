@@ -50,6 +50,8 @@ namespace PolyNetworking
         {
             Networking.isServer = isServer;
 
+            CheckNetworkAvailability();
+
             if (!networkIsAvailable)
             {
                 Debug.WriteLine("Nätverk är inte tillgängligt.");
@@ -159,9 +161,19 @@ namespace PolyNetworking
                     byte[] bytes = listener.Receive(ref groupEP);
 
                     if (isServer)
-                        AddReceivedClientInput(Encoding.UTF8.GetString(bytes, 0, bytes.Length));
+                    {
+                        string msg = Encoding.UTF8.GetString(bytes, 0, bytes.Length);
+                        Core.Tools.Log("Time: " + System.DateTime.Now.ToString("HHmmssfff") +
+                                       "  Listener: Server receives: <" + msg + ">");
+                        AddReceivedClientInput(msg);
+                    }
                     else
-                        SetReceivedDrawData(Encoding.UTF8.GetString(bytes, 0, bytes.Length));
+                    {
+                        string msg = Encoding.UTF8.GetString(bytes, 0, bytes.Length);
+                        Core.Tools.Log("Time: " + System.DateTime.Now.ToString("HHmmssfff") +
+                                       "  Listener: Client receives: <" + msg + ">");
+                        SetReceivedDrawData(msg);
+                    }
                 }
             }
             catch (Exception e)
