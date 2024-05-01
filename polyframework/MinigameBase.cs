@@ -246,6 +246,8 @@ namespace Minigame_Base
                     frameDrawData = timestamp + "#" + frameDrawData;
 
                     Debug.WriteLine("Server sending frameDrawData: " + frameDrawData);
+                    Core.Tools.Log("Time: " + System.DateTime.Now.ToString("HHmmssfff") +
+                                   "  Draw: Server sends frameDrawData: <" + frameDrawData + ">");
                     PolyNetworking.Networking.SendDrawData(frameDrawData);
                 }
             }
@@ -253,6 +255,13 @@ namespace Minigame_Base
             {
                 // Get the latest drawData that has been received from the server
                 string drawData = PolyNetworking.Networking.GetReceivedDrawData();
+
+                if (drawData is null)
+                    Core.Tools.Log("Time: " + System.DateTime.Now.ToString("HHmmssfff") +
+                                   "  Client received drawData: null");
+                else
+                    Core.Tools.Log("Time: " + System.DateTime.Now.ToString("HHmmssfff") +
+                                   "  Client received drawData of length: " + drawData.Length);
 
                 if (drawData is not null && drawData.Length > 0)
                 {
@@ -300,8 +309,8 @@ namespace Minigame_Base
                                                    layerDepth: 0.0f);
 
                         // Log the drawData strings
-                        foreach (string valueString in valueStrings)
-                            Debug.WriteLine("Next valueString: " + valueString);
+                        //foreach (string valueString in valueStrings)
+                        //    Debug.WriteLine("Next valueString: " + valueString);
                     }
                 }
             }
