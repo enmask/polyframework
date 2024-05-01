@@ -172,7 +172,7 @@ namespace Minigame_Base
                 if (frameClientInput.Length > 1)
                 {
                     // Add timestamp at the beginning of the message
-                    string timestamp = System.DateTime.Now.ToString("HHmmss");
+                    string timestamp = System.DateTime.Now.ToString("HHmmssfff");
                     frameClientInput = timestamp + "#"  + "K" + clientNo + ";"+ frameClientInput;
                     SendClientInput(frameClientInput);
                 }
@@ -227,7 +227,7 @@ namespace Minigame_Base
                 if (frameDrawData.Length > 0)
                 {
                     // Add timestamp at the beginning of the message
-                    string timestamp = System.DateTime.Now.ToString("HHmmss");
+                    string timestamp = System.DateTime.Now.ToString("HHmmssfff");
                     frameDrawData = timestamp + "#" + frameDrawData;
 
                     //Debug.WriteLine("Sending frameDrawData: " + frameDrawData);
