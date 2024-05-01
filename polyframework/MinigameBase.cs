@@ -95,6 +95,8 @@ namespace Minigame_Base
         TimeSpan updateElapsedTime;
         TimeSpan frameElapsedTime;
 
+        bool lWasDown;
+
         public MinigameBase()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -146,6 +148,8 @@ namespace Minigame_Base
             updateElapsedTime = TimeSpan.Zero;
             frameElapsedTime = TimeSpan.Zero;
 
+            lWasDown = false;
+
             base.Initialize();
         }
 
@@ -157,8 +161,13 @@ namespace Minigame_Base
             if (Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            if (Keyboard.GetState().IsKeyDown(Keys.L))
+            if (!lWasDown && Keyboard.GetState().IsKeyDown(Keys.L))
+            {
                 Core.Tools.WriteLogListToFile();
+                lWasDown = true;
+            }
+            else
+                lWasDown = false;
 
             //UpdateFPS(gameTime);
             updateCounter++;
