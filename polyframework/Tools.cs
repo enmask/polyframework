@@ -19,10 +19,12 @@ namespace Core
 
         public static void WriteLogListToFile()
         {
+            var tempList = new List<string>(logList);
+
             System.IO.File.WriteAllText("DelayedLogfile.txt", "This is the file DelayedLogfile.txt\n");
             System.IO.File.AppendAllText("DelayedLogfile.txt", "\n----------------------------\nWriteLogListToDebugLog begin\n----------------------------\n");
 
-            foreach (var item in logList)
+            foreach (var item in tempList)
                 System.IO.File.AppendAllText("DelayedLogfile.txt", item + "\n");
             System.IO.File.AppendAllText("DelayedLogfile.txt", "--------------------------\nWriteLogListToDebugLog end\n--------------------------\n");
         }
