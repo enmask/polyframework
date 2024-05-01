@@ -87,6 +87,9 @@ namespace Minigame_Base
 
         protected List<KeyboardState?> keyboardStates;
 
+        int updateNo;
+        int frameNo;
+
         // FPS-beräkning
         int updateCounter;
         int frameCounter;
@@ -141,6 +144,9 @@ namespace Minigame_Base
             keyboardStates.Add(null);
             keyboardStates.Add(null);
 
+            int updateNo = 0;
+            int frameNo = 0;
+
             int updateCounter = 0;
             int frameCounter = 0;
             int updateRate = 0;
@@ -156,7 +162,7 @@ namespace Minigame_Base
         protected override void Update(GameTime gameTime)
         {
             Core.Tools.Log("\nTime: " + System.DateTime.Now.ToString("HHmmssfff") + "  Update START (isServer=" + IsServer() + ")" +
-                           ", updateCounter = " + updateCounter + ", frameCounter = " + frameCounter);
+                           ", updateNo = " + updateNo + ", frameNo = " + frameNo);
 
             if (Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
@@ -170,6 +176,7 @@ namespace Minigame_Base
                 lWasDown = false;
 
             //UpdateFPS(gameTime);
+            updateNo++;
             updateCounter++;
             UpdateFrequency(ref updateCounter, ref updateRate, ref updateElapsedTime, gameTime);
 
@@ -202,14 +209,15 @@ namespace Minigame_Base
             base.Update(gameTime);
 
             Core.Tools.Log("Time: " + System.DateTime.Now.ToString("HHmmssfff") + "  Update END (isServer=" + IsServer() + ")" +
-                           ", updateCounter = " + updateCounter + ", frameCounter = " + frameCounter + "\n");
+                           ", updateNo = " + updateNo + ", frameNo = " + frameNo + "\n");
         }
 
         protected override void Draw(GameTime gameTime)
         {
             Core.Tools.Log("\nTime: " + System.DateTime.Now.ToString("HHmmssfff") + "  Draw START (isServer=" + IsServer() + ")" +
-                  ", updateCounter = " + updateCounter + ", frameCounter = " + frameCounter);
+                  ", updateNo = " + updateNo + ", frameNo = " + frameNo);
 
+            frameNo++;
             frameCounter++;
             UpdateFrequency(ref frameCounter, ref frameRate, ref frameElapsedTime, gameTime);
 
@@ -328,7 +336,7 @@ namespace Minigame_Base
             base.Draw(gameTime);
 
             Core.Tools.Log("Time: " + System.DateTime.Now.ToString("HHmmssfff") + "  Draw END (isServer=" + IsServer() + ")" +
-                           ", updateCounter = " + updateCounter + ", frameCounter = " + frameCounter + "\n");
+                           ", updateNo = " + updateNo + ", frameNo = " + frameNo + "\n");
         }
 
         protected bool IsServer()
