@@ -11,6 +11,7 @@ using nkast.Aether.Physics2D.Collision.Shapes;
 using Newtonsoft.Json;
 using System.IO;
 using System.Linq;
+using System.Threading;
 //using System.Reflection.Metadata.Ecma335;
 //using System.Net.Mail;
 //using static System.Windows.Forms.VisualStyles.VisualStyleElement.Tab;
@@ -279,6 +280,27 @@ namespace Minigame_Base
                 else
                     Core.Tools.Log("Time: " + System.DateTime.Now.ToString("HHmmssfff") +
                                    "  Client received drawData of length: " + drawData.Length);
+
+                const int MAX_WAIT_TIME = 10; // Max time to wait for data in milliseconds
+
+                // Variant 1 START
+                bool dataReady = drawData is not null && drawData.Length > 0;
+                if (!dataReady)
+                {
+                    Stopwatch timer = Stopwatch.StartNew();
+                    while (!dataReady && timer.ElapsedMilliseconds < MAX_WAIT_TIME)
+                    {
+                        Thread.Sleep(1); // Väntar en kort tid för att kontrollera igen
+                        drawData = PolyNetworking.Networking.GetReceivedDrawData();
+                        dataReady = drawData is not null && drawData.Length > 0;
+                   }
+                    timer.Stop();
+                }
+
+                // Variant 1 END
+
+
+
 
                 if (drawData is not null && drawData.Length > 0)
                 {
