@@ -64,6 +64,9 @@ namespace Minigame_Base
         const int NUM_DECIMALS_ROTATION = 2;
         const int NUM_DECIMALS_SCALE = 2;
 
+        // Sometimes drawdata arrives late. Max time to wait for it in milliseconds.ä
+        const int MAX_WAIT_TIME = 10;
+
         //
         // Instance variables
         //
@@ -281,9 +284,6 @@ namespace Minigame_Base
                     Core.Tools.Log("Time: " + System.DateTime.Now.ToString("HHmmssfff") +
                                    "  Client received drawData of length: " + drawData.Length);
 
-                const int MAX_WAIT_TIME = 10; // Max time to wait for data in milliseconds
-
-                // Variant 1 START
                 bool dataReady = drawData is not null && drawData.Length > 0;
                 if (!dataReady)
                 {
@@ -296,11 +296,6 @@ namespace Minigame_Base
                    }
                     timer.Stop();
                 }
-
-                // Variant 1 END
-
-
-
 
                 if (drawData is not null && drawData.Length > 0)
                 {
