@@ -65,7 +65,7 @@ namespace Minigame_Base
         const int NUM_DECIMALS_SCALE = 2;
 
         // Sometimes drawdata arrives late. Max time to wait for it in milliseconds.ä
-        const int MAX_WAIT_TIME = 10;
+        const int MAX_WAIT_TIME = 20;
 
         //
         // Instance variables
