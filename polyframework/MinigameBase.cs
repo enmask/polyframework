@@ -89,7 +89,8 @@ namespace Minigame_Base
 
         protected List<Core.Timer> timers = new List<Core.Timer>();
 
-        protected List<KeyboardState?> keyboardStates;
+        //protected List<KeyboardState?> inputStates;
+        protected List<(KeyboardState?, MouseState?, GamePadState?)> inputStates;
 
         int updateNo;
         int frameNo;
@@ -140,21 +141,21 @@ namespace Minigame_Base
 
             InitializeTextureMap();
 
-            keyboardStates = new List<KeyboardState?>();
+            inputStates = new List<(KeyboardState?, MouseState?, GamePadState?)>();
 
             // TODO: Quick and dirty, just to see if the networking works. Remove!
-            keyboardStates.Add(null);
-            keyboardStates.Add(null);
-            keyboardStates.Add(null);
-            keyboardStates.Add(null);
+            inputStates.Add((null, null, null));
+            inputStates.Add((null, null, null));
+            inputStates.Add((null, null, null));
+            inputStates.Add((null, null, null));
 
-            int updateNo = 0;
-            int frameNo = 0;
+            updateNo = 0;
+            frameNo = 0;
 
-            int updateCounter = 0;
-            int frameCounter = 0;
-            int updateRate = 0;
-            int frameRate = 0;
+            updateCounter = 0;
+            frameCounter = 0;
+            updateRate = 0;
+            frameRate = 0;
             updateElapsedTime = TimeSpan.Zero;
             frameElapsedTime = TimeSpan.Zero;
 
@@ -179,30 +180,9 @@ namespace Minigame_Base
             else
                 lWasDown = false;
 
-            //UpdateFPS(gameTime);
             updateNo++;
             updateCounter++;
             UpdateFrequency(ref updateCounter, ref updateRate, ref updateElapsedTime, gameTime);
-
-            // Get an array of pressed keys
-            var pressedKeys = Keyboard.GetState().GetPressedKeys();
-
-            // Serialize the array to a string
-            string serializedKeys = string.Join(";", pressedKeys.Select(key => ((int)key).ToString("X")));
-
-            // TODO: Only sends keyboard input for now, not mouse and gamepad
-            var frameClientInput = serializedKeys + "#";
-
-            if (!IsServer())
-            {
-                if (frameClientInput.Length > 1)
-                {
-                    // Add timestamp at the beginning of the message
-                    string timestamp = System.DateTime.Now.ToString("HHmmssfff");
-                    frameClientInput = timestamp + "#"  + "K" + clientNo + ";"+ frameClientInput;
-                    SendClientInput(frameClientInput);
-                }
-            }
 
             // Update all timers that the minigame has added
             foreach (var timer in timers)
@@ -231,58 +211,34 @@ namespace Minigame_Base
             {
                 string frameDrawData = "";
 
+                // The server draws all things and sends draw data to the clients
                 foreach (KeyValuePair<int, Thing> kvp in things)
                 {
                     Thing thing = kvp.Value;
 
                     if (!thing.isVisible)
                         continue;
-
-                    Vector2 scrPos = ToScrPos(thing.body.Position);
-
-                    _spriteBatch.Draw(texture: thing.tex,
-                                      position: scrPos,
-                                      sourceRectangle: new Rectangle(0, 0, thing.tex.Width, thing.tex.Height),
-                                      color: new Color(thing.drawTintRed, thing.drawTintGreen,
-                                                       thing.drawTintBlue, thing.drawTintAlpha) /*Color.White*/,
-                                      rotation: -thing.body.Rotation,
-                                      origin: thing.origin,
-                                      scale: thing.scale,
-                                      effects: SpriteEffects.None,
-                                      layerDepth: 0.0f);
-
-                    // The clients will also want to draw the things, so send draw data to them
-                    string thingDrawData = ThingToDrawData(thing);
-
-                    Core.Tools.Log("Time: " + System.DateTime.Now.ToString("HHmmssfff") +
-                                   "  Draw: Server draws (and will send thingString: <" + thingDrawData + ">)");
-
+                    DrawThing(thing);
+                    string thingDrawData = SerializeThing(thing);
                     frameDrawData += thingDrawData;
                 }
 
                 if (frameDrawData.Length > 0)
                 {
-                    // Add timestamp at the beginning of the message
-                    string timestamp = System.DateTime.Now.ToString("HHmmssfff");
-                    frameDrawData = timestamp + "#" + frameDrawData;
+                    string msgPrefix = PolyNetworking.Networking.SerializeMessagePrefix(clientNo.ToString());
+                    frameDrawData = PolyNetworking.Networking.JoinMessageSections(msgPrefix, frameDrawData);
+                    PolyNetworking.Networking.SendDrawData(frameDrawData);
 
                     Debug.WriteLine("Server sending frameDrawData: " + frameDrawData);
                     Core.Tools.Log("Time: " + System.DateTime.Now.ToString("HHmmssfff") +
                                    "  Draw: Server sends frameDrawData: <" + frameDrawData + ">");
-                    PolyNetworking.Networking.SendDrawData(frameDrawData);
                 }
             }
             else
             {
+                // The clients receive draw data from the server and draw the things
                 // Get the latest drawData that has been received from the server
                 string drawData = PolyNetworking.Networking.GetReceivedDrawData();
-
-                if (drawData is null)
-                    Core.Tools.Log("Time: " + System.DateTime.Now.ToString("HHmmssfff") +
-                                   "  Client received drawData: null");
-                else
-                    Core.Tools.Log("Time: " + System.DateTime.Now.ToString("HHmmssfff") +
-                                   "  Client received drawData of length: " + drawData.Length);
 
                 bool dataReady = drawData is not null && drawData.Length > 0;
                 if (!dataReady)
@@ -293,61 +249,24 @@ namespace Minigame_Base
                         Thread.Sleep(1); // Väntar en kort tid för att kontrollera igen
                         drawData = PolyNetworking.Networking.GetReceivedDrawData();
                         dataReady = drawData is not null && drawData.Length > 0;
-                   }
-                    timer.Stop();
+                    }
                 }
 
                 if (drawData is not null && drawData.Length > 0)
                 {
-                    // Split the drawData string into an array of things
-                    string[] thingStrings = drawData.Split(OBJECT_SEPARATOR);
-                    bool isFirstPart = true;  // A flag to check if it's the first part
 
-                    foreach (string thingString in thingStrings)
+                    string[] parts = drawData.Split('#');
+                    string header = parts[0];
+                    for (int i = 1; i < parts.Length; i++)
                     {
-                        if (thingString.Length == 0)
+                        if (parts[i].Length == 0)
                             continue;
-
-                        if (isFirstPart)
-                        {
-                            // Handle timestamp
-                            string receivedTimestamp = thingString;
-                            isFirstPart = false;
-                            continue;
-                        }
-
-                        // Split thing into an array of values
-                        string[] valueStrings = thingString.Split(FIELD_SEPARATOR);
-
-                        Texture2D tex = GetTexture(int.Parse(valueStrings[DRAWDATA_INDEX_TEXTURE_INDEX]));
-                        Vector2 scrPos = new Vector2(float.Parse(valueStrings[DRAWDATA_INDEX_XPOS]),
-                                                     float.Parse(valueStrings[DRAWDATA_INDEX_YPOS]));
-                        Color color = HexToColor(valueStrings[DRAWDATA_INDEX_COLOR]);
-                        float rotation = float.Parse(valueStrings[DRAWDATA_INDEX_ROTATION]);
-                        Vector2 origin = new Vector2(float.Parse(valueStrings[DRAWDATA_INDEX_XORIGIN]),
-                                                     float.Parse(valueStrings[DRAWDATA_INDEX_YORIGIN]));
-                        Vector2 scale = new Vector2(float.Parse(valueStrings[DRAWDATA_INDEX_XSCALE]),
-                                                    float.Parse(valueStrings[DRAWDATA_INDEX_YSCALE]));
-
-                        Core.Tools.Log("Time: " + System.DateTime.Now.ToString("HHmmssfff") +
-                                       "  Draw: Client draws according to thingString: <" + thingString + ">");
-
-                        _spriteBatch.Draw(texture: tex,
-                                                   position: scrPos,
-                                                   sourceRectangle: new Rectangle(0, 0, tex.Width, tex.Height),
-                                                   color: color,
-                                                   rotation: -rotation,
-                                                   origin: origin,
-                                                   scale: scale,
-                                                   effects: SpriteEffects.None,
-                                                   layerDepth: 0.0f);
-
-                        // Log the drawData strings
-                        //foreach (string valueString in valueStrings)
-                        //    Debug.WriteLine("Next valueString: " + valueString);
+                        Thing t = DeserializeThing(parts[i]);
+                        DrawThing(t, false);
                     }
                 }
             }
+
             _spriteBatch.End();
 
             base.Draw(gameTime);
@@ -373,22 +292,81 @@ namespace Minigame_Base
             }
         }
 
+        // HACK: When the client code calls this, it passes doConvertPos = false,
+        // because those temporary things are already in screen coordinates.
+        protected void DrawThing(Thing thing, bool doConvertPos = true)
+        {
+            Vector2 scrPos;
+            if (doConvertPos)
+                scrPos = ToScrPos(thing.body.Position);
+            else
+                scrPos = thing.body.Position;
+
+            _spriteBatch.Draw(texture: thing.tex,
+                                          position: scrPos,
+                                          sourceRectangle: new Rectangle(0, 0, thing.tex.Width, thing.tex.Height),
+                                          color: new Color(thing.drawTintRed, thing.drawTintGreen,
+                                                           thing.drawTintBlue, thing.drawTintAlpha) /*Color.White*/,
+                                          rotation: -thing.body.Rotation,
+                                          origin: thing.origin,
+                                          scale: thing.scale,
+                                          effects: SpriteEffects.None,
+                                          layerDepth: 0.0f);
+        }
+
         protected void PrepareUserInput()
         {
-            // Get "real" triples for the server player
+            // Both server and clients detect local input and store it in inputStates
             KeyboardState keyboardState = Keyboard.GetState();
             MouseState mouseState = Mouse.GetState();
             GamePadState gamePadState = GamePad.GetState(PlayerIndex.One);
+            inputStates[clientNo] = (keyboardState, null, gamePadState);
 
-            // TODO: Quick and dirty, just to see if the networking works. Remove!
-            keyboardStates[clientNo] = keyboardState;
-
+            // The client sends the input to the server
+            if (!IsServer())
+            {
+                // Send the input triples to the clients
+                SendClientInput(SerializeInput(inputStates[clientNo]));
+            }
             // Create "fake" triples based on received client data
-            KeyboardState? kState = DeserializeAndProcessNetworkInput();
-
+            DeserializeAndProcessNetworkInput();
         }
 
-        private KeyboardState? DeserializeAndProcessNetworkInput()
+        private string SerializeInput((KeyboardState?, MouseState?, GamePadState?) triple)
+        {
+
+
+
+
+            // Get an array of pressed keys
+            KeyboardState kState = triple.Item1 ?? Keyboard.GetState();
+            var pressedKeys = kState.GetPressedKeys();
+
+            // Serialize the array to a string
+            string serializedKeys = string.Join(";", pressedKeys.Select(key => ((int)key).ToString("X")));
+
+            // TODO: Only sends keyboard input for now, not mouse and gamepad
+            var frameClientInput = serializedKeys + "#";
+
+            if (frameClientInput.Length > 1)
+            {
+
+                frameClientInput = PolyNetworking.Networking.JoinMessageValues("K", frameClientInput);
+                string msgPrefix = PolyNetworking.Networking.SerializeMessagePrefix(clientNo.ToString());
+                frameClientInput = PolyNetworking.Networking.JoinMessageSections(msgPrefix, frameClientInput);
+
+                /*
+                // Add timestamp at the beginning of the message
+                string timestamp = System.DateTime.Now.ToString("HHmmssfff");
+                frameClientInput = timestamp + "#" + "K" + clientNo + ";" + frameClientInput;
+                //SendClientInput(frameClientInput);
+                */
+            }
+
+            return frameClientInput;
+        }
+
+        private void DeserializeAndProcessNetworkInput()
         {
             KeyboardState? kState = null;
             int clientNoOfInput = -1;
@@ -396,9 +374,9 @@ namespace Minigame_Base
             // Get network data
             string networkData = PolyNetworking.Networking.GetReceivedClientsInput();
 
-            // If there is no network data to process, return
-            if (networkData.Length == 0)
-                return kState;
+            // If there is no network data to proceass, return
+            if (networkData is null || networkData.Length == 0)
+                return;
 
             // Split the network data into an array of strings
             string[] networkDataArray = networkData.Split('#');
@@ -447,10 +425,10 @@ namespace Minigame_Base
                     kState = new KeyboardState(pressedKeys.ToArray());
 
                     // Add the KeyboardState object to the list
-                    keyboardStates[clientNoOfInput] = kState;
+                    inputStates[clientNoOfInput] = (kState, null, null);
                 }
             }
-            return kState;
+            return;
         }
 
         void SendClientInput(string cInput)
@@ -458,44 +436,27 @@ namespace Minigame_Base
             PolyNetworking.Networking.SendClientInput(cInput);
         }
 
-        string GetClientInput()
-        {
-            string clientInput = "";
-
-            // Hämta aktuell GamePadState
-            GamePadState state = GamePad.GetState(PlayerIndex.One);
-
-            // Serialize gamepad buttons
-            //Debug.WriteLine("Buttons.hashCode: " + state.Buttons.GetHashCode());
-            var gamepadButtonHashCode = state.Buttons.GetHashCode();
-
-            // Timestamp
-            string timestamp = DateTime.Now.ToString("HHmmss");
-
-            return clientInput;
-        }
-
-        (KeyboardState?, MouseState?, GamePadState?) GetTripleState()
-        {
-            return (null, null, null);
-        }
-
         protected string FormatValue(float value, int numDecimals)
+            {
+                // Round to specified number of decimals
+                string formatted = value.ToString($"F{numDecimals}");
+
+                // Remove unnecessary zeros and commas
+                // Reverse index search from the end to remove zeros after the decimal point
+                formatted = formatted.TrimEnd('0').TrimEnd(',');
+
+                return formatted;
+            }
+
+        protected string SerializeThing(Thing thing)
         {
-            // Round to specified number of decimals
-            string formatted = value.ToString($"F{numDecimals}");
-
-            // Remove unnecessary zeros and commas
-            // Reverse index search from the end to remove zeros after the decimal point
-            formatted = formatted.TrimEnd('0').TrimEnd(',');
-
-            return formatted;
+            return ThingToDrawData(thing);
         }
 
         protected string ThingToDrawData(Thing thing)
         {
             Vector2 scrPos = ToScrPos(thing.body.Position);
-            string timestamp = System.DateTime.Now.ToString("HHmmss");
+            //string timestamp = System.DateTime.Now.ToString("HHmmss");
             string colorHex = ColorToHex(thing.drawTintAlpha,
                                          thing.drawTintRed,
                                          thing.drawTintGreen,
@@ -519,6 +480,43 @@ namespace Minigame_Base
             return str;
         }
 
+        protected Thing DeserializeThing(string thingString)
+        {
+            // Split the thingString into an array of values
+            string[] values = thingString.Split(';');
+
+            // Get the texture
+            Texture2D tex = GetTexture(int.Parse(values[DRAWDATA_INDEX_TEXTURE_INDEX]));
+
+            // Get the position
+            Vector2 pos = new Vector2(float.Parse(values[DRAWDATA_INDEX_XPOS]),
+                                                     float.Parse(values[DRAWDATA_INDEX_YPOS]));
+
+            // Get the color
+            Color color = HexToColor(values[DRAWDATA_INDEX_COLOR]);
+
+            // Get the rotation
+            float rotation = float.Parse(values[DRAWDATA_INDEX_ROTATION]);
+
+            // Get the origin
+            Vector2 origin = new Vector2(float.Parse(values[DRAWDATA_INDEX_XORIGIN]),
+                                                       float.Parse(values[DRAWDATA_INDEX_YORIGIN]));
+
+            // Get the scale
+            Vector2 scale = new Vector2(float.Parse(values[DRAWDATA_INDEX_XSCALE]),
+                                                      float.Parse(values[DRAWDATA_INDEX_YSCALE]));
+            
+            // Create a new Thing object
+            Thing thing = new Thing(world, tex, pos, BodyType.Static, true,
+                                    drawTintAlpha: color.A, drawTintRed: color.R,
+                                    drawTintGreen: color.G, drawTintBlue: color.B,
+                                    rot: rotation,
+                                    originX: origin.X,
+                                    originY: origin.Y,
+                                    scaleX: scale.X,
+                                    scaleY: scale.Y);
+            return thing;
+        }
 
         // Mapping functions for textures
         //   int GetTextureIndex(Texture2D texture)    SKIP

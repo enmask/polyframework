@@ -158,7 +158,7 @@ namespace polyframework
                             switch (plrIx)
                             {
                                 case 0:
-                                    keyboardState = keyboardStates[plrIx];
+                                    keyboardState = inputStates[plrIx].Item1;
                                     if (keyboardState != null)
                                     {
                                         bool isKeyDown = (bool)keyboardState?.IsKeyDown(Keys.Up);   // Player 1 accelerate
@@ -167,7 +167,7 @@ namespace polyframework
                                     else
                                         return false;
                                 case 1:
-                                    keyboardState = keyboardStates[plrIx];
+                                    keyboardState = inputStates[plrIx].Item1;
                                     if (keyboardState != null)
                                     {
                                         bool isKeyDown = (bool)keyboardState?.IsKeyDown(Keys.Up);   // Player 2 accelerate

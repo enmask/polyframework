@@ -12,14 +12,14 @@ using System.Collections.Concurrent;
 // Draw data:
 // 1. Have the server call SendDrawData() in Draw() once per frame to send draw data to the network.
 // 2. Have each client call SetReceivedDrawData() to store new draw data as it's received from the network.
-// 3. Have each client call GetDrawData() in Draw() once per frame to get the latest draw data.
+// 3. Have each client call GetReceivedDrawData() in Draw() once per frame to get the latest draw data.
 
 // Client input:
 // 1. Have each client call SendClientInput() in Update() to send its player input to the network.
 // 2. Have the server call AddReceivedClientInput() to store new input data as it's received from the network.
-// 3. Have the server call GetClientsInput() to get all player input data that has been received from the network
+// 3. Have the server call GetReceivedClientsInput() to get all player input data that has been received from the network
 //    since the last call to GetClientsInput().
-//    Note the 's' in GetClientsInput(), which indicates that there can be input from multiple clients.
+//    Note the 's' in GetReceivedClientsInput(), which indicates that there can be input from multiple clients.
 
 namespace PolyNetworking
 {
@@ -42,7 +42,7 @@ namespace PolyNetworking
         private static IPAddress BROADCAST_ADDRESS = CalculateBroadcastAddress(IPAddress.Parse(IPv4_ADDRESS), IPAddress.Parse(SUBNET_MASK));
         //private static string drawData = "";
         private static ConcurrentQueue<string> drawData = new ConcurrentQueue<string>();
-        private static string clientsInput = "";
+        private static ConcurrentQueue<string> clientsInput = new ConcurrentQueue<string>();
         private static Socket socket;
         private static IPEndPoint ep;
 
@@ -95,6 +95,7 @@ namespace PolyNetworking
 
         public static void SendDrawData(string dData)
         {
+            Debug.WriteLine("SendDrawData: " + dData);
             if (!networkIsAvailable)
             {
                 //Debug.WriteLine("Försöker sända data när nätverket inte är tillgängligt.");
@@ -118,7 +119,7 @@ namespace PolyNetworking
         
         public static void AddReceivedClientInput(string cInput)
         {
-            clientsInput += cInput;
+            clientsInput.Enqueue(cInput);
         }
 
         public static string GetReceivedDrawData()
@@ -135,10 +136,25 @@ namespace PolyNetworking
 
         public static string GetReceivedClientsInput()
         {
-            string s = clientsInput;
-            // The clientsInput is now consumed, and should not be gotten again.
-            clientsInput = "";
-            return s;
+            string earliestData = null;
+            clientsInput.TryDequeue(out earliestData);
+            return earliestData;
+        }
+
+        public static string SerializeMessagePrefix(string senderId)
+        {
+            string timestamp = System.DateTime.Now.ToString("HHmmssfff");
+            return timestamp + ";" + senderId;
+        }
+
+        public static string JoinMessageSections(string sections1, string sections2)
+        {
+            return sections1 + "#" + sections2;
+        }
+
+        public static string JoinMessageValues(string values1, string values2)
+        {
+            return values1 + ";" + values2;
         }
 
         static void Listener()
