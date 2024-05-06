@@ -316,20 +316,22 @@ namespace Minigame_Base
 
         protected void PrepareUserInput()
         {
-            // Both server and clients detect local input and store it in inputStates
+            // Both server and client prepares user input by detecting local input
             KeyboardState keyboardState = Keyboard.GetState();
             MouseState mouseState = Mouse.GetState();
             GamePadState gamePadState = GamePad.GetState(PlayerIndex.One);
             inputStates[clientNo] = (keyboardState, null, gamePadState);
 
-            // The client sends the input to the server
-            if (!IsServer())
+            if (IsServer())
             {
-                // Send the input triples to the clients
+                // The server prepares user input it got from the clients
+                DeserializeNetworkInput();
+            }
+            else
+            {
+                // A client sends the input to the server
                 SendClientInput(SerializeInput(inputStates[clientNo]));
             }
-            // Create "fake" triples based on received client data
-            DeserializeAndProcessNetworkInput();
         }
 
         private string SerializeInput((KeyboardState?, MouseState?, GamePadState?) triple)
@@ -366,7 +368,7 @@ namespace Minigame_Base
             return frameClientInput;
         }
 
-        private void DeserializeAndProcessNetworkInput()
+        private void DeserializeNetworkInput()
         {
             KeyboardState? kState = null;
             int clientNoOfInput = -1;
