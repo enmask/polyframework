@@ -1,4 +1,4 @@
-# MonoGame-särskilda ignoreringar
+# MonoGame-sï¿½rskilda ignoreringar
 bin/
 obj/
 Content/bin/
@@ -16,7 +16,7 @@ bld/
 [Ll]ogs/
 [Tt]est[Rr]esult*
 
-# Unity-särskilda ignoreringar
+# Unity-sï¿½rskilda ignoreringar
 [Ll]ibrary/
 [Tt]emp/
 [Oo]bj/
@@ -25,7 +25,7 @@ bld/
 [Ll]ogs/
 [Mm]emoryCaptures/
 
-# Filändelser att ignorera
+# Filï¿½ndelser att ignorera
 *.suo
 *.tmp
 *.user
@@ -239,3 +239,4 @@ node_modules/
 **/*.HTMLClient/GeneratedArtifacts
 **/*.DesktopClient/GeneratedArtifacts
 **/*.DesktopClient/ModelManifest.xml
+polyframework/Content.zip

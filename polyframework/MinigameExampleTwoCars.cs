@@ -30,14 +30,18 @@ namespace polyframework
         // and origin is bottom left corner of the game window.
         readonly Vector2 PLR1_STARTPOS = new Vector2(5.2f, 0.8f);
         readonly Vector2 PLR2_STARTPOS = new Vector2(5.2f, 1.6f);
+        readonly Vector2 PLR3_STARTPOS = new Vector2(5.2f, 2.4f);
+        readonly Vector2 PLR4_STARTPOS = new Vector2(5.2f, 3.2f);
         readonly Color PLR1_COLOR = Color.Red;
         readonly Color PLR2_COLOR = new Color(0, 255, 0, 255);
+        readonly Color PLR3_COLOR = new Color(0, 0, 255, 255);
+        readonly Color PLR4_COLOR = new Color(0, 255, 255, 255);
 
         //
         // Instance variables
         //
         Texture2D plrTex;
-        Thing plr1, plr2;
+        Thing plr1, plr2, plr3, plr4;
         List<Thing> players;
         SpriteFont font;
 
@@ -59,11 +63,15 @@ namespace polyframework
             // Add red and green players
             plr1 = AddPlayer(PLR1_COLOR, PLR1_STARTPOS);
             plr2 = AddPlayer(PLR2_COLOR, PLR2_STARTPOS);
+            plr3 = AddPlayer(PLR3_COLOR, PLR3_STARTPOS);
+            plr4 = AddPlayer(PLR4_COLOR, PLR4_STARTPOS);
 
             // It's nice to have a list of just the players, not all the things
             players = new List<Thing>();
             players.Add(plr1);
             players.Add(plr2);
+            players.Add(plr3);
+            players.Add(plr4);
 
             // This is a top-down game, so turn off gravity
             world.Gravity = new Vector2(0, 0);
@@ -83,12 +91,7 @@ namespace polyframework
             font = Content.Load<SpriteFont>(fontPath);
 
             // Load level (textures, colliders, and map)
-            string levelFolder = MINIGAME_NAME + "/" + LEVEL_NAME;
-            // LoadLevel(Content.RootDirectory, levelFolder);
-            // TEST, skip levelFolder
             LoadLevel(Content.RootDirectory, "");
-
-
         }
 
         protected override void Update(GameTime gameTime)
@@ -150,6 +153,7 @@ namespace polyframework
 
             for (int plrIx = 0; plrIx < players.Count; plrIx++)
             {
+                keyboardState = inputStates[plrIx].Item1;
                 if (plr == players[plrIx])
                 {
                     switch (action)
@@ -158,7 +162,6 @@ namespace polyframework
                             switch (plrIx)
                             {
                                 case 0:
-                                    keyboardState = inputStates[plrIx].Item1;
                                     if (keyboardState != null)
                                     {
                                         bool isKeyDown = (bool)keyboardState?.IsKeyDown(Keys.Up);   // Player 1 accelerate
@@ -167,10 +170,25 @@ namespace polyframework
                                     else
                                         return false;
                                 case 1:
-                                    keyboardState = inputStates[plrIx].Item1;
                                     if (keyboardState != null)
                                     {
                                         bool isKeyDown = (bool)keyboardState?.IsKeyDown(Keys.Up);   // Player 2 accelerate
+                                        return isKeyDown;
+                                    }
+                                    else
+                                        return false;
+                                case 2:
+                                    if (keyboardState != null)
+                                    {
+                                        bool isKeyDown = (bool)keyboardState?.IsKeyDown(Keys.Up);   // Player 3 accelerate
+                                        return isKeyDown;
+                                    }
+                                    else
+                                        return false;
+                                case 3:
+                                    if (keyboardState != null)
+                                    {
+                                        bool isKeyDown = (bool)keyboardState?.IsKeyDown(Keys.Up);   // Player 4 accelerate
                                         return isKeyDown;
                                     }
                                     else
@@ -182,9 +200,41 @@ namespace polyframework
                             switch (plrIx)
                             {
                                 case 0:
-                                    return Keyboard.GetState().IsKeyDown(Keys.Left); // Player 1 turnleft
+                                    if (keyboardState != null)
+                                    {
+                                        bool isKeyDown = (bool)keyboardState?.IsKeyDown(Keys.Left);   // Player 1 turnleft
+                                        return isKeyDown;
+                                    }
+                                    else
+                                        return false;
+                                    //return Keyboard.GetState().IsKeyDown(Keys.Left);   // Player 1 turnleft
                                 case 1:
-                                    return Keyboard.GetState().IsKeyDown(Keys.A);    // Player 2 turnleft
+                                    if (keyboardState != null)
+                                    {
+                                        bool isKeyDown = (bool)keyboardState?.IsKeyDown(Keys.Left);   // Player 2 turnleft
+                                        return isKeyDown;
+                                    }
+                                    else
+                                        return false;
+                                    //return Keyboard.GetState().IsKeyDown(Keys.A);      // Player 2 turnleft
+                                case 2:
+                                    if (keyboardState != null)
+                                    {
+                                        bool isKeyDown = (bool)keyboardState?.IsKeyDown(Keys.Left);   // Player 3 turnleft
+                                        return isKeyDown;
+                                    }
+                                    else
+                                        return false;
+                                //return Keyboard.GetState().IsKeyDown(Keys.Left);   // Player 3 turnleft
+                                case 3:
+                                    if (keyboardState != null)
+                                    {
+                                        bool isKeyDown = (bool)keyboardState?.IsKeyDown(Keys.Left);   // Player 4 turnleft
+                                        return isKeyDown;
+                                    }
+                                    else
+                                        return false;
+                                //return Keyboard.GetState().IsKeyDown(Keys.Left);   // Player 4 turnleft
                                 default:
                                     return false;
                             }
@@ -192,9 +242,39 @@ namespace polyframework
                             switch (plrIx)
                             {
                                 case 0:
-                                    return Keyboard.GetState().IsKeyDown(Keys.Right); // Player 1 turnright
+                                    if (keyboardState != null)
+                                    {
+                                        bool isKeyDown = (bool)keyboardState?.IsKeyDown(Keys.Right);   // Player 1 turnleft
+                                        return isKeyDown;
+                                    }
+                                    else
+                                        return false;
+                                    //return Keyboard.GetState().IsKeyDown(Keys.Right); // Player 1 turnright
                                 case 1:
-                                    return Keyboard.GetState().IsKeyDown(Keys.D);    // Player 2 turnright
+                                    if (keyboardState != null)
+                                    {
+                                        bool isKeyDown = (bool)keyboardState?.IsKeyDown(Keys.Right);   // Player 2 turnright
+                                        return isKeyDown;
+                                    }
+                                    else
+                                        return false;
+                                //return Keyboard.GetState().IsKeyDown(Keys.D);    // Player 2 turnright
+                                case 2:
+                                    if (keyboardState != null)
+                                    {
+                                        bool isKeyDown = (bool)keyboardState?.IsKeyDown(Keys.Right);   // Player 3 turnright
+                                        return isKeyDown;
+                                    }
+                                    else
+                                        return false;
+                                case 3:
+                                    if (keyboardState != null)
+                                    {
+                                        bool isKeyDown = (bool)keyboardState?.IsKeyDown(Keys.Right);   // Player 4 turnright
+                                        return isKeyDown;
+                                    }
+                                    else
+                                        return false;
                                 default:
                                     return false;
                             }

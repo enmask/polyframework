@@ -6,6 +6,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Collections.Concurrent;
+using System.Net.NetworkInformation;
 
 
 // Usage:
@@ -38,6 +39,7 @@ namespace PolyNetworking
         private const string SUBNET_MASK = "255.255.0.0";
         private const int DRAWDATA_PORT = 11001;
         private const int CLIENTSINPUT_PORT = 11002;
+        private const int MAX_DRAWDATA_QUEUE_SIZE = 3;
 
         private static IPAddress BROADCAST_ADDRESS = CalculateBroadcastAddress(IPAddress.Parse(IPv4_ADDRESS), IPAddress.Parse(SUBNET_MASK));
         //private static string drawData = "";
@@ -75,27 +77,58 @@ namespace PolyNetworking
                 ep = new IPEndPoint(BROADCAST_ADDRESS, CLIENTSINPUT_PORT);
         }
 
-        private static void CheckNetworkAvailability()
+        public static bool IsNetworkAvailable()
         {
-            try
-            {
-                // Test connection to the broadcast address
-                using (var tempSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp))
-                {
-                    tempSocket.Connect(new IPEndPoint(BROADCAST_ADDRESS, DRAWDATA_PORT));
-                    networkIsAvailable = true;
-                }
-            }
-            catch (SocketException)
-            {
-                networkIsAvailable = false;
-            }
+            return networkIsAvailable;
         }
 
+        private static void CheckNetworkAvailability()
+        {
+            networkIsAvailable = false;  // Start by assuming the network is not available.
+
+            foreach (NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                // Ensure the network interface is 'up' and is of type Ethernet.
+                if (ni.OperationalStatus == OperationalStatus.Up &&
+                    ni.NetworkInterfaceType == NetworkInterfaceType.Ethernet)
+                {
+                    bool isVirtual = false;  // Flag to detect if the interface is virtual.
+                    string description = ni.Description.ToLower();
+
+                    // List of known descriptions for virtual adapters.
+                    string[] virtualIdentifiers = { "virtual", "hyper-v", "vbox", "virtualbox", "vmnet", "vmware", "pseudo" };
+
+                    foreach (var identifier in virtualIdentifiers)
+                    {
+                        if (description.Contains(identifier))
+                        {
+                            isVirtual = true;
+                            break;
+                        }
+                    }
+
+                    if (!isVirtual)  // If it's not a virtual adapter, proceed.
+                    {
+                        foreach (UnicastIPAddressInformation ip in ni.GetIPProperties().UnicastAddresses)
+                        {
+                            if (ip.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                            {
+                                networkIsAvailable = true;  // Network is available through a physical Ethernet connection.
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (networkIsAvailable)  // Break out of the loop once a valid network is found.
+                {
+                    break;
+                }
+            }
+            Debug.WriteLine($"Network availability check: {networkIsAvailable}");
+        }
 
         public static void SendDrawData(string dData)
         {
-            Debug.WriteLine("SendDrawData: " + dData);
             if (!networkIsAvailable)
             {
                 //Debug.WriteLine("Försöker sända data när nätverket inte är tillgängligt.");
@@ -103,25 +136,57 @@ namespace PolyNetworking
             }
 
             byte[] sendbuf = Encoding.UTF8.GetBytes(dData);
+
+            Core.Tools.Log("\n\n: Time: " + System.DateTime.Now.ToString("HHmmssfff") +
+                           "  SendDrawData: Server sends dData to network: <" + dData + ">");
+
             socket.SendTo(sendbuf, ep);
         }
 
         public static void SendClientInput(string cInput)
         {
             byte[] sendbuf = Encoding.UTF8.GetBytes(cInput);
+
+            Core.Tools.Log("\n\n: Time: " + System.DateTime.Now.ToString("HHmmssfff") +
+                           "  SendClientInput: Client sends cInput to network: <" + cInput + ">");
+
             socket.SendTo(sendbuf, ep);
         }
 
+        /* Obsolete, allow any queue size
         public static void SetReceivedDrawData(string dData)
         {
             drawData.Enqueue(dData);
+
+            Core.Tools.Log("\n\n: Time: " + System.DateTime.Now.ToString("HHmmssfff") +
+                              "  SetReceivedDrawData: Client added dData to queue: <" + dData + ">, Count=" + drawData.Count);
         }
-        
+        */
+
+        /* New, allow only MAX_DRAWDATA_QUEUE_SIZE elements in the queue */
+        //private static ConcurrentQueue<DrawData> drawDataQueue = new ConcurrentQueue<DrawData>();
+
+        public static void SetReceivedDrawData(string dData) {
+            drawData.Enqueue(dData);
+            // Säkerställ att köns storlek inte överstiger N
+            while (drawData.Count > MAX_DRAWDATA_QUEUE_SIZE) {
+                drawData.TryDequeue(out _);
+            }
+        }
+
+        /**/
+
+
+
         public static void AddReceivedClientInput(string cInput)
         {
             clientsInput.Enqueue(cInput);
+
+            Core.Tools.Log("\n\n: Time: " + System.DateTime.Now.ToString("HHmmssfff") +
+                                          "  AddReceivedClientInput: Server added cInput to queue: <" + cInput + ">, Count=" + clientsInput.Count);
         }
 
+        /* Obsolete, picks the newest and throws away the rest
         public static string GetReceivedDrawData()
         {
             string latestData = null;
@@ -129,15 +194,37 @@ namespace PolyNetworking
 
             // Empties the queue until the last element
             while (drawData.TryDequeue(out data))
+            {
+                Core.Tools.Log("\n\n: Time: " + System.DateTime.Now.ToString("HHmmssfff") +
+                               "  GetReceivedDrawData: Client gets from queue: <" + data + ">");
                 latestData = data;
+            }
 
             return latestData;
         }
+        */
+
+        /* New version, just picks the oldest */
+        public static string GetReceivedDrawData() {
+            if (drawData.TryDequeue(out string oldestData))
+            {
+                Core.Tools.Log("\n\n: Time: " + System.DateTime.Now.ToString("HHmmssfff") +
+                               "  GetReceivedDrawData: Client gets from queue: <" + oldestData + ">");
+                return oldestData;
+            }
+            return null;
+        }
+        /**/
+
 
         public static string GetReceivedClientsInput()
         {
             string earliestData = null;
             clientsInput.TryDequeue(out earliestData);
+
+            Core.Tools.Log("\n\n: Time: " + System.DateTime.Now.ToString("HHmmssfff") +
+                           "  GetReceivedClientsInput: Server gets from queue: <" + earliestData + ">");
+
             return earliestData;
         }
 
@@ -152,9 +239,16 @@ namespace PolyNetworking
             return sections1 + "#" + sections2;
         }
 
+        /*
         public static string JoinMessageValues(string values1, string values2)
         {
             return values1 + ";" + values2;
+        }
+        */
+
+        public static string JoinMessageValues(params string[] values)
+        {
+            return string.Join(";", values);
         }
 
         static void Listener()
@@ -179,14 +273,14 @@ namespace PolyNetworking
                     if (isServer)
                     {
                         string msg = Encoding.UTF8.GetString(bytes, 0, bytes.Length);
-                        Core.Tools.Log("Time: " + System.DateTime.Now.ToString("HHmmssfff") +
+                        Core.Tools.Log("\n\nTime: " + System.DateTime.Now.ToString("HHmmssfff") +
                                        "  Listener: Server receives: <" + msg + ">");
                         AddReceivedClientInput(msg);
                     }
                     else
                     {
                         string msg = Encoding.UTF8.GetString(bytes, 0, bytes.Length);
-                        Core.Tools.Log("Time: " + System.DateTime.Now.ToString("HHmmssfff") +
+                        Core.Tools.Log("\n\nTime: " + System.DateTime.Now.ToString("HHmmssfff") +
                                        "  Listener: Client receives: <" + msg + ">");
                         SetReceivedDrawData(msg);
                     }
@@ -215,6 +309,6 @@ namespace PolyNetworking
 
             return new IPAddress(broadcastAddress);
         }
-        
+
     } // End of class Networking
 } // End of namespace PolyNetworking

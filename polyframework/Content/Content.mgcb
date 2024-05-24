@@ -13,6 +13,174 @@
 
 #---------------------------------- Content ---------------------------------#
 
+#begin CarRace/Level1/Pictures/racetrackCurveDownToRight1_128x128.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:CarRace/Level1/Pictures/racetrackCurveDownToRight1_128x128.png
+
+#begin CarRace/Level1/Pictures/racetrackCurveDownToRight2_128x128.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:CarRace/Level1/Pictures/racetrackCurveDownToRight2_128x128.png
+
+#begin CarRace/Level1/Pictures/racetrackCurveDownToRight3_128x128.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:CarRace/Level1/Pictures/racetrackCurveDownToRight3_128x128.png
+
+#begin CarRace/Level1/Pictures/racetrackCurveRightToDown1_128x128.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:CarRace/Level1/Pictures/racetrackCurveRightToDown1_128x128.png
+
+#begin CarRace/Level1/Pictures/racetrackCurveRightToDown2_128x128.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:CarRace/Level1/Pictures/racetrackCurveRightToDown2_128x128.png
+
+#begin CarRace/Level1/Pictures/racetrackCurveRightToDown3_128x128.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:CarRace/Level1/Pictures/racetrackCurveRightToDown3_128x128.png
+
+#begin CarRace/Level1/Pictures/racetrackCurveRightToUp1_128x128.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:CarRace/Level1/Pictures/racetrackCurveRightToUp1_128x128.png
+
+#begin CarRace/Level1/Pictures/racetrackCurveRightToUp2_128x128.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:CarRace/Level1/Pictures/racetrackCurveRightToUp2_128x128.png
+
+#begin CarRace/Level1/Pictures/racetrackCurveRightToUp3_128x128.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:CarRace/Level1/Pictures/racetrackCurveRightToUp3_128x128.png
+
+#begin CarRace/Level1/Pictures/racetrackCurveUpToRight1_128x128.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:CarRace/Level1/Pictures/racetrackCurveUpToRight1_128x128.png
+
+#begin CarRace/Level1/Pictures/racetrackCurveUpToRight2_128x128.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:CarRace/Level1/Pictures/racetrackCurveUpToRight2_128x128.png
+
+#begin CarRace/Level1/Pictures/racetrackCurveUpToRight3_128x128.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:CarRace/Level1/Pictures/racetrackCurveUpToRight3_128x128.png
+
+#begin CarRace/Level1/Pictures/racetrackStraightHorizontal_128x128.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:CarRace/Level1/Pictures/racetrackStraightHorizontal_128x128.png
+
+#begin CarRace/Level1/Pictures/racetrackStraightVertical_128x128.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:CarRace/Level1/Pictures/racetrackStraightVertical_128x128.png
+
 #begin TwoCars/Fonts/font.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor

@@ -21,6 +21,57 @@
     <Folder Include="Content\TwoCars\Level1\" />
   </ItemGroup>
   <ItemGroup>
+    <None Update="Content\CarRace\Level1\Colliders\racetrackCurveDownToRight1_128x128.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Content\CarRace\Level1\Colliders\racetrackCurveDownToRight2_128x128.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Content\CarRace\Level1\Colliders\racetrackCurveDownToRight3_128x128.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Content\CarRace\Level1\Colliders\racetrackCurveRightToDown1_128x128.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Content\CarRace\Level1\Colliders\racetrackCurveRightToDown2_128x128.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Content\CarRace\Level1\Colliders\racetrackCurveRightToDown3_128x128.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Content\CarRace\Level1\Colliders\racetrackCurveRightToUp1_128x128.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Content\CarRace\Level1\Colliders\racetrackCurveRightToUp2_128x128.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Content\CarRace\Level1\Colliders\racetrackCurveRightToUp3_128x128.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Content\CarRace\Level1\Colliders\racetrackCurveUpToRight1_128x128.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Content\CarRace\Level1\Colliders\racetrackCurveUpToRight2_128x128.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Content\CarRace\Level1\Colliders\racetrackCurveUpToRight3_128x128.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Content\CarRace\Level1\Colliders\racetrackStraightHorizontal_128x128.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Content\CarRace\Level1\Colliders\racetrackStraightVertical_128x128.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Content\CarRace\Level1\level.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Content\CarRace\Level1\Pictures\racetrackCurveDownToRight1_128x128.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Update="Content\CarRace\Level1\Pictures\racetrackCurveDownToRight2_128x128.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
     <None Update="Content\TwoCars\Level1\level.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

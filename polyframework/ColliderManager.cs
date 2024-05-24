@@ -72,11 +72,6 @@ namespace Core
                 vertices.Add(new Vector2(x, y));
             }
 
-            foreach (Vector2 pt in vertices)
-            {
-                Debug.WriteLine("Next pt in vertices: " + pt);
-            }
-
             // Skapa och returnera en PolygonShape baserad på de angivna vertices
             return new PolygonShape(vertices, density: 1f);
         }

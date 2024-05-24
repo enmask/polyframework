@@ -12,6 +12,8 @@ using Newtonsoft.Json;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Globalization;
+using System.Drawing.Text;
 //using System.Reflection.Metadata.Ecma335;
 //using System.Net.Mail;
 //using static System.Windows.Forms.VisualStyles.VisualStyleElement.Tab;
@@ -64,7 +66,7 @@ namespace Minigame_Base
         const int NUM_DECIMALS_ROTATION = 2;
         const int NUM_DECIMALS_SCALE = 2;
 
-        // Sometimes drawdata arrives late. Max time to wait for it in milliseconds.ä
+        // Sometimes drawdata arrives late. Max time to wait for it in milliseconds.
         const int MAX_WAIT_TIME = 20;
 
         //
@@ -90,7 +92,7 @@ namespace Minigame_Base
         protected List<Core.Timer> timers = new List<Core.Timer>();
 
         //protected List<KeyboardState?> inputStates;
-        protected List<(KeyboardState?, MouseState?, GamePadState?)> inputStates;
+        protected List<(KeyboardState, MouseState?, GamePadState?)> inputStates;
 
         int updateNo;
         int frameNo;
@@ -141,13 +143,13 @@ namespace Minigame_Base
 
             InitializeTextureMap();
 
-            inputStates = new List<(KeyboardState?, MouseState?, GamePadState?)>();
+            inputStates = new List<(KeyboardState, MouseState?, GamePadState?)>();
 
             // TODO: Quick and dirty, just to see if the networking works. Remove!
-            inputStates.Add((null, null, null));
-            inputStates.Add((null, null, null));
-            inputStates.Add((null, null, null));
-            inputStates.Add((null, null, null));
+            inputStates.Add((new KeyboardState(), null, null));
+            inputStates.Add((new KeyboardState(), null, null));
+            inputStates.Add((new KeyboardState(), null, null));
+            inputStates.Add((new KeyboardState(), null, null));
 
             updateNo = 0;
             frameNo = 0;
@@ -168,11 +170,10 @@ namespace Minigame_Base
         {
             Core.Tools.Log("\nTime: " + System.DateTime.Now.ToString("HHmmssfff") + "  Update START (isServer=" + IsServer() + ")" +
                            ", updateNo = " + updateNo + ", frameNo = " + frameNo);
-
             if (Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            if (!lWasDown && Keyboard.GetState().IsKeyDown(Keys.L))
+            if (!lWasDown && Keyboard.GetState().IsKeyDown(Keys.Z))
             {
                 Core.Tools.WriteLogListToFile();
                 lWasDown = true;
@@ -229,8 +230,7 @@ namespace Minigame_Base
                     frameDrawData = PolyNetworking.Networking.JoinMessageSections(msgPrefix, frameDrawData);
                     PolyNetworking.Networking.SendDrawData(frameDrawData);
 
-                    Debug.WriteLine("Server sending frameDrawData: " + frameDrawData);
-                    Core.Tools.Log("Time: " + System.DateTime.Now.ToString("HHmmssfff") +
+                    Core.Tools.Log("\n\nTime: " + System.DateTime.Now.ToString("HHmmssfff") +
                                    "  Draw: Server sends frameDrawData: <" + frameDrawData + ">");
                 }
             }
@@ -320,12 +320,30 @@ namespace Minigame_Base
             KeyboardState keyboardState = Keyboard.GetState();
             MouseState mouseState = Mouse.GetState();
             GamePadState gamePadState = GamePad.GetState(PlayerIndex.One);
+
             inputStates[clientNo] = (keyboardState, null, gamePadState);
 
             if (IsServer())
             {
-                // The server prepares user input it got from the clients
-                DeserializeNetworkInput();
+                if (PolyNetworking.Networking.IsNetworkAvailable())
+                {
+                    // The server prepares user input it (actually or seemingly) got from the clients
+                    DeserializeNetworkInput();
+                }
+                else
+                {
+                    // In a local multiplayer game, the local input contains input for all players.
+                    // Here we hack it so that the server prepares user input for all clients,
+                    // and makes it look like the input came from the clients via the network.
+
+                    // Channel input for some keys from inputStates[0] (input of server)
+                    // to inputStates[1]-[3] (pretend that it's input from clients).
+                    ChannelKeyboardInput();
+
+                    // Detect gamepad Two-Four on server and put in inputStates[1]-[3] ()
+                    // to intputStates[1]-[3] (input of clients)
+                    ChannelGamePadInput();
+                }
             }
             else
             {
@@ -334,54 +352,306 @@ namespace Minigame_Base
             }
         }
 
-        private string SerializeInput((KeyboardState?, MouseState?, GamePadState?) triple)
+        private string SerializeInput((KeyboardState, MouseState?, GamePadState?) triple)
+        {
+            KeyboardState kState = triple.Item1;
+            GamePadState? gState = triple.Item3;
+
+            string kMsg = SerializeKeyboardInput(kState);
+            string gMsg = SerializeGamePadInput(gState);
+
+            string msg = PolyNetworking.Networking.JoinMessageSections(kMsg, gMsg);
+            string msgPrefix = PolyNetworking.Networking.SerializeMessagePrefix(clientNo.ToString());
+            msg = PolyNetworking.Networking.JoinMessageSections(msgPrefix, msg);
+
+            //MouseState ms;
+
+            return msg;
+        }
+
+
+        private string SerializeKeyboardInput(KeyboardState? kState)
         {
 
-
-
+            // If there is no KeyboardState, return an empty string
+            if (kState is null)
+                return "";
 
             // Get an array of pressed keys
-            KeyboardState kState = triple.Item1 ?? Keyboard.GetState();
-            var pressedKeys = kState.GetPressedKeys();
+            // We already know that kState is not null, so we can use the ! operator
+            Keys[] pressedKeys = kState.Value.GetPressedKeys();
 
             // Serialize the array to a string
-            string serializedKeys = string.Join(";", pressedKeys.Select(key => ((int)key).ToString("X")));
+            string serializedKeys = string.Concat(pressedKeys.Select(key => ((int)key).ToString("X")));
 
-            // TODO: Only sends keyboard input for now, not mouse and gamepad
-            var frameClientInput = serializedKeys + "#";
+            // TODO: Mouse input
+            var kMsg = serializedKeys + "#";
 
-            if (frameClientInput.Length > 1)
+            if (kMsg.Length > 1)
+                kMsg = PolyNetworking.Networking.JoinMessageValues("K", kMsg);
+
+            return kMsg;
+        }
+
+        private string SerializeGamePadInput(GamePadState? gState)
+        {
+            if (gState is null || !gState.Value.IsConnected)
+                return "";
+
+            var state = gState.Value;
+            string buttonCodes = ConvertToHexadecimalPositions(state.Buttons.GetHashCode());
+
+            // Extract and format analog stick and trigger values
+            var lx = FormatAnalogValue(state.ThumbSticks.Left.X);
+            var ly = FormatAnalogValue(state.ThumbSticks.Left.Y);
+            var rx = FormatAnalogValue(state.ThumbSticks.Right.X);
+            var ry = FormatAnalogValue(state.ThumbSticks.Right.Y);
+            var lt = FormatAnalogValue(state.Triggers.Left);
+            var rt = FormatAnalogValue(state.Triggers.Right);
+
+            // Construct the complete gamepad message
+            string gPadMsg = PolyNetworking.Networking.JoinMessageValues("G", buttonCodes, lx, ly, rx, ry, lt, rt) + "#";
+
+            return gPadMsg;
+        }
+
+        void ChannelKeyboardInput() {
+
+            // Save the original, "combined", input state
+            var initialState = inputStates[0];
+
+            // Serialize client 0 input
+            string msg = "";
+            KeyboardState kState = initialState.Item1;
+
+            // Serialize LEFT from server keyboard and make it look like LEFT on server
+            if (kState.IsKeyDown(Keys.Left))
+                msg += "25"; // TODO: Don't hardcode the key code
+
+            // Serialize RIGHT from server keyboard and make it look like RIGHT on server
+            if (kState.IsKeyDown(Keys.Right))
+                msg += "27"; // TODO: Don't hardcode the key code
+
+            // Serialize UP from server keyboard and make it look like UP on server
+            if (kState.IsKeyDown(Keys.Up))
+                msg += "26"; // TODO: Don't hardcode the key code
+
+            // Serialize UP from server keyboard and make it look like UP on server
+            if (kState.IsKeyDown(Keys.Down))
+                msg += "28"; // TODO: Don't hardcode the key code
+
+            // Add separator for keyboard section
+            msg += "#";
+
+            // Add specifier for keyboard input
+            if (msg.Length > 1)
+                msg = PolyNetworking.Networking.JoinMessageValues("K", msg);
+            else
+                msg = "";
+
+            // Add message prefix for client 0
+            string msgPrefix = PolyNetworking.Networking.SerializeMessagePrefix(0.ToString());
+            msg = PolyNetworking.Networking.JoinMessageSections(msgPrefix, msg);
+
+            FakeDeserialize(msg);
+
+            // Serialize client 1 input
+            msg = "";
+            //if (initialState.Item1 is not null)
+            //{
+                kState = initialState.Item1; 
+
+                // Serialize A from server keyboard and make it look like Left on client 1
+                if (kState.IsKeyDown(Keys.A))
+                    msg += "25"; // TODO: Don't hardcode the key code
+
+                // Serialize D from server keyboard and make it look like Right on client 1
+                if (kState.IsKeyDown(Keys.D))
+                    msg += "27"; // TODO: Don't hardcode the key code
+
+                // Serialize W from server keyboard and make it look like Up on client 1
+                if (kState.IsKeyDown(Keys.W))
+                    msg += "26"; // TODO: Don't hardcode the key code
+
+                // Serialize S from server keyboard and make it look like Down on client 1
+                if (kState.IsKeyDown(Keys.S))
+                    msg += "28"; // TODO: Don't hardcode the key code
+
+                // Add separator for keyboard section
+                msg += "#";
+
+                // Add specifier for keyboard input
+                if (msg.Length > 1)
+                    msg = PolyNetworking.Networking.JoinMessageValues("K", msg);
+                else
+                    msg = "";
+
+                // Add message prefix for client 1
+                //msg =
+                msgPrefix = PolyNetworking.Networking.SerializeMessagePrefix(1.ToString());
+                msg = PolyNetworking.Networking.JoinMessageSections(msgPrefix, msg);
+            //}
+
+            FakeDeserialize(msg);
+
+            // Serialize client 2 input
+            msg = "";
+            //if (initialState.Item1 is not null)
+            //{
+                kState = initialState.Item1;
+
+                // Serialize F from server keyboard and make it look like Left on client 2
+                if (kState.IsKeyDown(Keys.F))
+                    msg += "25"; // TODO: Don't hardcode the key code
+
+                // Serialize H from server keyboard and make it look like Right on client 2
+                if (kState.IsKeyDown(Keys.H))
+                    msg += "27"; // TODO: Don't hardcode the key code
+
+                // Serialize T from server keyboard and make it look like Up on client 2
+                if (kState.IsKeyDown(Keys.T))
+                    msg += "26"; // TODO: Don't hardcode the key code
+
+                // Serialize G from server keyboard and make it look like Down on client 2
+                if (kState.IsKeyDown(Keys.G))
+                    msg += "28"; // TODO: Don't hardcode the key code
+
+                // Add separator for keyboard section
+                msg += "#";
+
+                // Add specifier for keyboard input
+                if (msg.Length > 1)
+                    msg = PolyNetworking.Networking.JoinMessageValues("K", msg);
+                else
+                    msg = "";
+
+                // Add message prefix for client 2
+                //msg =
+                msgPrefix = PolyNetworking.Networking.SerializeMessagePrefix(2.ToString());
+                msg = PolyNetworking.Networking.JoinMessageSections(msgPrefix, msg);
+            //}
+
+            FakeDeserialize(msg);
+
+            // Serialize client 3 input
+            msg = "";
+            //if (initialState.Item1 is not null)
+            //{
+                kState = initialState.Item1;
+
+                // Serialize K from server keyboard and make it look like Left on client 3
+                if (kState.IsKeyDown(Keys.K))
+                    msg += "25"; // TODO: Don't hardcode the key code
+
+                // Serialize Ö from server keyboard and make it look like Right on client 3
+                //if (kState.IsKeyDown(Keys.Ö))
+                if (kState.IsKeyDown(Keys.OemTilde))
+                    msg += "27"; // TODO: Don't hardcode the key code
+
+                // Serialize O from server keyboard and make it look like Up on client 3
+                if (kState.IsKeyDown(Keys.O))
+                    msg += "26"; // TODO: Don't hardcode the key code
+
+                // Serialize L from server keyboard and make it look like Down on client 3
+                if (kState.IsKeyDown(Keys.L))
+                    msg += "28"; // TODO: Don't hardcode the key code
+
+                // Add separator for keyboard section
+                msg += "#";
+
+                // Add specifier for keyboard input
+                if (msg.Length > 1)
+                    msg = PolyNetworking.Networking.JoinMessageValues("K", msg);
+                else
+                    msg = "";
+
+                // Add message prefix for client 3
+                //msg =
+                msgPrefix = PolyNetworking.Networking.SerializeMessagePrefix(3.ToString());
+                msg = PolyNetworking.Networking.JoinMessageSections(msgPrefix, msg);
+            //}
+
+            FakeDeserialize(msg);
+
+            // TODO: Add code for element 3 here! (Or just make a general loop?)
+        }
+
+        void ChannelGamePadInput()
+        {
+            var currentState = inputStates[1];
+            var newState = (currentState.Item1, currentState.Item2, GamePad.GetState(PlayerIndex.Two));
+            inputStates[1] = newState;
+
+            currentState = inputStates[2];
+            newState = (currentState.Item1, currentState.Item2, GamePad.GetState(PlayerIndex.Three));
+            inputStates[2] = newState;
+
+            currentState = inputStates[3];
+            newState = (currentState.Item1, currentState.Item2, GamePad.GetState(PlayerIndex.Four));
+            inputStates[3] = newState;
+        }
+
+        void FakeDeserialize(string msg)
+        {
+            DeserializeInput(msg);
+        }
+
+        private string FormatAnalogValue(float value)
+        {
+            // Use a threshold to determine if the value should be treated as "0"
+            return Math.Abs(value) < 0.01 ? "" : value.ToString("F2", CultureInfo.InvariantCulture);
+        }
+
+        private static string ConvertToHexadecimalPositions(int number)
+        {
+            string binary = Convert.ToString(number, 2).PadLeft(16, '0');  // Convert to binary ensuring 16 digits
+            char[] binaryArray = binary.ToCharArray();
+            Array.Reverse(binaryArray);  // Reverse to count positions from the least significant bit
+            string hexPositions = "";
+
+            for (int i = 0; i < binaryArray.Length; i++)
             {
-
-                frameClientInput = PolyNetworking.Networking.JoinMessageValues("K", frameClientInput);
-                string msgPrefix = PolyNetworking.Networking.SerializeMessagePrefix(clientNo.ToString());
-                frameClientInput = PolyNetworking.Networking.JoinMessageSections(msgPrefix, frameClientInput);
-
-                /*
-                // Add timestamp at the beginning of the message
-                string timestamp = System.DateTime.Now.ToString("HHmmssfff");
-                frameClientInput = timestamp + "#" + "K" + clientNo + ";" + frameClientInput;
-                //SendClientInput(frameClientInput);
-                */
+                if (binaryArray[i] == '1')
+                {
+                    hexPositions += i.ToString("X");  // Convert the position to hexadecimal format
+                }
             }
 
-            return frameClientInput;
+            return hexPositions;
+        }
+
+        public static int ConvertFromHexadecimalPositions(string hexPositions)
+        {
+            int number = 0;
+            foreach (char hex in hexPositions)
+            {
+                int position = Convert.ToInt32(hex.ToString(), 16);
+                number |= 1 << position;
+            }
+            return number;
         }
 
         private void DeserializeNetworkInput()
         {
-            KeyboardState? kState = null;
+            string networkData;
+            while ((networkData = PolyNetworking.Networking.GetReceivedClientsInput()) != null)
+            {
+                DeserializeInput(networkData);
+            }
+        }
+
+        private void DeserializeInput(string msg)
+        {
+            KeyboardState kState = new KeyboardState();
+            GamePadState gState = new GamePadState();
             int clientNoOfInput = -1;
 
-            // Get network data
-            string networkData = PolyNetworking.Networking.GetReceivedClientsInput();
-
             // If there is no network data to proceass, return
-            if (networkData is null || networkData.Length == 0)
+            if (msg is null || msg.Length == 0)
                 return;
 
             // Split the network data into an array of strings
-            string[] networkDataArray = networkData.Split('#');
+            string[] networkDataArray = msg.Split('#');
 
             bool isFirstPart = true;
 
@@ -390,7 +660,10 @@ namespace Minigame_Base
                 if (isFirstPart)
                 {
                     // Handle timestamp
-                    string receivedTimestamp = data;
+                    string[] msgPrefixValues = data.Split(';');
+                    string receivedTimestamp = msgPrefixValues[0];
+                    clientNoOfInput = int.Parse(msgPrefixValues[1]);
+
                     isFirstPart = false;
                     continue;
                 }
@@ -407,18 +680,16 @@ namespace Minigame_Base
                 // If the specifier is "K" (for Keyboard), process keyboard data
                 if (specifier[0] == 'K')
                 {
-                    clientNoOfInput = int.Parse(specifier.Substring(1, 1));
-
                     // Get the keyboard data
-                    string keys = values[1];
+                    string keysStr = values[1];
 
                     // Create a HashSet<Keys> to store the pressed keys
                     HashSet<Keys> pressedKeys = new HashSet<Keys>();
 
-                    for (int i = 0; i < keys.Length; i += 2)
+                    for (int i = 0; i < keysStr.Length; i += 2)
                     {
                         // Convert the hex pair to a key and add it to the HashSet
-                        Keys k = (Keys)int.Parse(keys.Substring(i, 2), System.Globalization.NumberStyles.HexNumber);
+                        Keys k = (Keys)int.Parse(keysStr.Substring(i, 2), System.Globalization.NumberStyles.HexNumber);
                         pressedKeys.Add(k);
                     }
 
@@ -429,9 +700,27 @@ namespace Minigame_Base
                     // Add the KeyboardState object to the list
                     inputStates[clientNoOfInput] = (kState, null, null);
                 }
+                else if (specifier[0] == 'G')
+                {
+                    // Get the gamepad button data
+                    string buttonsStr = values[1];
+
+                    int buttonBits = ConvertFromHexadecimalPositions(buttonsStr);
+
+                    // Create a KeyboardState object based on the pressed keys
+                    gState = new GamePadState(new Vector2(0, 0), new Vector2(0, 0), 0, 0, (Buttons)buttonBits);
+
+                    // Add the KeyboardState object to the list
+                    inputStates[clientNoOfInput] = (kState, null, null);
+                }
             }
+
+            // Make a triplet of the input data
+            inputStates[clientNoOfInput] = (kState, null, gState);
+
             return;
         }
+
 
         void SendClientInput(string cInput)
         {
@@ -531,7 +820,7 @@ namespace Minigame_Base
         {
             foreach (var item in textures)
             {
-                if (item.Value.Name == textureName)
+                if (MatchLastName(item.Value.Name, textureName))
                     return item.Key;
             }
             throw new System.ArgumentException("Texture " + textureName + " not found in textures", nameof(textureName));
@@ -541,6 +830,14 @@ namespace Minigame_Base
         {
             return textures[textureIndex];
         }
+
+
+        bool MatchLastName(string foundName, string textureName)
+        {
+            return foundName.Substring(foundName.LastIndexOf('/') + 1) ==
+                   textureName.Substring(textureName.LastIndexOf('/') + 1);
+        }
+
 
         public static string ColorToHex(int alpha, int red, int green, int blue)
         {
@@ -631,14 +928,30 @@ namespace Minigame_Base
                 // Remove everything but the asset name. E.g. change "CarRace/Colliders/piece1" to "piece1"
                 string assetName = assetPath.Substring(assetPath.LastIndexOf('/') + 1);
 
-                // Pictures (.png, .jpg etc) have been build into .xnb using the MGCB (MonoGame Content Builder) tool
+                // Pictures (.png, .jpg etc) have been built into .xnb using the MGCB (MonoGame Content Builder) tool
                 if (extension == ".xnb")
                 {
                     if (assetPath.Contains("/Pictures/") || assetPath.Contains("\\Pictures\\"))
                     {
                         var texture = Content.Load<Texture2D>(assetPath);
                         Debug.WriteLine("Loaded texture: " + assetPath);
+
+                        // Save the texture to the texture collection
+                        AddTexture(texture);
+                        //textureDict[assetName] = texture;
+
                     }
+
+                    /*
+                    if (file.Contains("/Pictures/") || file.Contains("\\Pictures\\"))
+                    {
+                        var texture = Content.Load<Texture2D>(assetPath);
+                        // Save the texture to a collection
+                        textureDict[assetName] = texture;
+                    }
+                    */
+
+
 
                 }
                 // Handle .json files directly, they are not built to .xnb files
@@ -661,6 +974,16 @@ namespace Minigame_Base
             BuildColliderShapes(collidersDataDict);
             BuildLevel(loadedLevel);
         }
+
+
+        // Save the texture to the texture collection
+        void AddTexture(Texture2D texture)
+        {
+            if (!textures.ContainsValue(texture))
+                textures.Add(nextTextureId++, texture);
+        }
+
+
 
         void BuildColliderShapes(Dictionary<string, Core.CollidersData> collidersDataDict)
         {
@@ -718,8 +1041,7 @@ namespace Minigame_Base
         public void AddThing(Thing thing)
         {
             things.Add(thing.id, thing);
-            if (!textures.ContainsValue(thing.tex))
-                textures.Add(nextTextureId++, thing.tex);
+            AddTexture(thing.tex);
         }
 
         public void RemoveThing(Thing thing)

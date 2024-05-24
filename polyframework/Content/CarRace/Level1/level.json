@@ -1,0 +1,535 @@
+{
+    "LevelIndex": 0,
+    "name": "Level 0",
+    "GroundTiles": [
+        {
+            "Position": {
+                "x": -5,
+                "y": -5,
+                "z": 0
+            },
+            "TileName": "racetrackCurveDownToRight2_128x128"
+        },
+        {
+            "Position": {
+                "x": -4,
+                "y": -5,
+                "z": 0
+            },
+            "TileName": "racetrackCurveDownToRight3_128x128"
+        },
+        {
+            "Position": {
+                "x": -3,
+                "y": -5,
+                "z": 0
+            },
+            "TileName": "racetrackStraightHorizontal_128x128"
+        },
+        {
+            "Position": {
+                "x": -2,
+                "y": -5,
+                "z": 0
+            },
+            "TileName": "racetrackStraightHorizontal_128x128"
+        },
+        {
+            "Position": {
+                "x": -1,
+                "y": -5,
+                "z": 0
+            },
+            "TileName": "racetrackStraightHorizontal_128x128"
+        },
+        {
+            "Position": {
+                "x": 0,
+                "y": -5,
+                "z": 0
+            },
+            "TileName": "racetrackStraightHorizontal_128x128"
+        },
+        {
+            "Position": {
+                "x": 1,
+                "y": -5,
+                "z": 0
+            },
+            "TileName": "racetrackStraightHorizontal_128x128"
+        },
+        {
+            "Position": {
+                "x": 2,
+                "y": -5,
+                "z": 0
+            },
+            "TileName": "racetrackStraightHorizontal_128x128"
+        },
+        {
+            "Position": {
+                "x": 3,
+                "y": -5,
+                "z": 0
+            },
+            "TileName": "racetrackStraightHorizontal_128x128"
+        },
+        {
+            "Position": {
+                "x": 4,
+                "y": -5,
+                "z": 0
+            },
+            "TileName": "racetrackStraightHorizontal_128x128"
+        },
+        {
+            "Position": {
+                "x": 5,
+                "y": -5,
+                "z": 0
+            },
+            "TileName": "racetrackStraightHorizontal_128x128"
+        },
+        {
+            "Position": {
+                "x": 6,
+                "y": -5,
+                "z": 0
+            },
+            "TileName": "racetrackStraightHorizontal_128x128"
+        },
+        {
+            "Position": {
+                "x": 7,
+                "y": -5,
+                "z": 0
+            },
+            "TileName": "racetrackStraightHorizontal_128x128"
+        },
+        {
+            "Position": {
+                "x": 8,
+                "y": -5,
+                "z": 0
+            },
+            "TileName": "racetrackCurveRightToUp1_128x128"
+        },
+        {
+            "Position": {
+                "x": 9,
+                "y": -5,
+                "z": 0
+            },
+            "TileName": "racetrackCurveRightToUp2_128x128"
+        },
+        {
+            "Position": {
+                "x": -5,
+                "y": -4,
+                "z": 0
+            },
+            "TileName": "racetrackCurveDownToRight1_128x128"
+        },
+        {
+            "Position": {
+                "x": 9,
+                "y": -4,
+                "z": 0
+            },
+            "TileName": "racetrackCurveRightToUp3_128x128"
+        },
+        {
+            "Position": {
+                "x": -5,
+                "y": -3,
+                "z": 0
+            },
+            "TileName": "racetrackStraightVertical_128x128"
+        },
+        {
+            "Position": {
+                "x": -1,
+                "y": -3,
+                "z": 0
+            },
+            "TileName": "racetrackStraightHorizontal_128x128"
+        },
+        {
+            "Position": {
+                "x": 0,
+                "y": -3,
+                "z": 0
+            },
+            "TileName": "racetrackCurveRightToUp1_128x128"
+        },
+        {
+            "Position": {
+                "x": 1,
+                "y": -3,
+                "z": 0
+            },
+            "TileName": "racetrackCurveRightToUp2_128x128"
+        },
+        {
+            "Position": {
+                "x": 2,
+                "y": -3,
+                "z": 0
+            },
+            "TileName": "racetrackCurveDownToRight3_128x128"
+        },
+        {
+            "Position": {
+                "x": 3,
+                "y": -3,
+                "z": 0
+            },
+            "TileName": "racetrackStraightHorizontal_128x128"
+        },
+        {
+            "Position": {
+                "x": 4,
+                "y": -3,
+                "z": 0
+            },
+            "TileName": "racetrackStraightHorizontal_128x128"
+        },
+        {
+            "Position": {
+                "x": 5,
+                "y": -3,
+                "z": 0
+            },
+            "TileName": "racetrackCurveRightToUp1_128x128"
+        },
+        {
+            "Position": {
+                "x": 6,
+                "y": -3,
+                "z": 0
+            },
+            "TileName": "racetrackCurveRightToUp2_128x128"
+        },
+        {
+            "Position": {
+                "x": 9,
+                "y": -3,
+                "z": 0
+            },
+            "TileName": "racetrackStraightVertical_128x128"
+        },
+        {
+            "Position": {
+                "x": -5,
+                "y": -2,
+                "z": 0
+            },
+            "TileName": "racetrackStraightVertical_128x128"
+        },
+        {
+            "Position": {
+                "x": 1,
+                "y": -2,
+                "z": 0
+            },
+            "TileName": "racetrackCurveDownToRight1_128x128"
+        },
+        {
+            "Position": {
+                "x": 6,
+                "y": -2,
+                "z": 0
+            },
+            "TileName": "racetrackCurveRightToUp3_128x128"
+        },
+        {
+            "Position": {
+                "x": 9,
+                "y": -2,
+                "z": 0
+            },
+            "TileName": "racetrackStraightVertical_128x128"
+        },
+        {
+            "Position": {
+                "x": -5,
+                "y": -1,
+                "z": 0
+            },
+            "TileName": "racetrackCurveUpToRight1_128x128"
+        },
+        {
+            "Position": {
+                "x": -4,
+                "y": -1,
+                "z": 0
+            },
+            "TileName": "racetrackCurveDownToRight3_128x128"
+        },
+        {
+            "Position": {
+                "x": -3,
+                "y": -1,
+                "z": 0
+            },
+            "TileName": "racetrackStraightHorizontal_128x128"
+        },
+        {
+            "Position": {
+                "x": -2,
+                "y": -1,
+                "z": 0
+            },
+            "TileName": "racetrackStraightHorizontal_128x128"
+        },
+        {
+            "Position": {
+                "x": 1,
+                "y": -1,
+                "z": 0
+            },
+            "TileName": "racetrackStraightVertical_128x128"
+        },
+        {
+            "Position": {
+                "x": 6,
+                "y": -1,
+                "z": 0
+            },
+            "TileName": "racetrackStraightVertical_128x128"
+        },
+        {
+            "Position": {
+                "x": 9,
+                "y": -1,
+                "z": 0
+            },
+            "TileName": "racetrackStraightVertical_128x128"
+        },
+        {
+            "Position": {
+                "x": -5,
+                "y": 0,
+                "z": 0
+            },
+            "TileName": "racetrackCurveDownToRight1_128x128"
+        },
+        {
+            "Position": {
+                "x": 1,
+                "y": 0,
+                "z": 0
+            },
+            "TileName": "racetrackCurveRightToDown3_128x128"
+        },
+        {
+            "Position": {
+                "x": 9,
+                "y": 0,
+                "z": 0
+            },
+            "TileName": "racetrackStraightVertical_128x128"
+        },
+        {
+            "Position": {
+                "x": -5,
+                "y": 1,
+                "z": 0
+            },
+            "TileName": "racetrackStraightVertical_128x128"
+        },
+        {
+            "Position": {
+                "x": -2,
+                "y": 1,
+                "z": 0
+            },
+            "TileName": "racetrackStraightHorizontal_128x128"
+        },
+        {
+            "Position": {
+                "x": -1,
+                "y": 1,
+                "z": 0
+            },
+            "TileName": "racetrackStraightHorizontal_128x128"
+        },
+        {
+            "Position": {
+                "x": 0,
+                "y": 1,
+                "z": 0
+            },
+            "TileName": "racetrackCurveRightToDown1_128x128"
+        },
+        {
+            "Position": {
+                "x": 1,
+                "y": 1,
+                "z": 0
+            },
+            "TileName": "racetrackCurveRightToDown2_128x128"
+        },
+        {
+            "Position": {
+                "x": 4,
+                "y": 1,
+                "z": 0
+            },
+            "TileName": "racetrackStraightVertical_128x128"
+        },
+        {
+            "Position": {
+                "x": 9,
+                "y": 1,
+                "z": 0
+            },
+            "TileName": "racetrackStraightVertical_128x128"
+        },
+        {
+            "Position": {
+                "x": -5,
+                "y": 2,
+                "z": 0
+            },
+            "TileName": "racetrackCurveUpToRight1_128x128"
+        },
+        {
+            "Position": {
+                "x": 4,
+                "y": 2,
+                "z": 0
+            },
+            "TileName": "racetrackCurveUpToRight1_128x128"
+        },
+        {
+            "Position": {
+                "x": 9,
+                "y": 2,
+                "z": 0
+            },
+            "TileName": "racetrackCurveRightToDown3_128x128"
+        },
+        {
+            "Position": {
+                "x": -5,
+                "y": 3,
+                "z": 0
+            },
+            "TileName": "racetrackCurveUpToRight2_128x128"
+        },
+        {
+            "Position": {
+                "x": -4,
+                "y": 3,
+                "z": 0
+            },
+            "TileName": "racetrackCurveUpToRight3_128x128"
+        },
+        {
+            "Position": {
+                "x": -3,
+                "y": 3,
+                "z": 0
+            },
+            "TileName": "racetrackStraightHorizontal_128x128"
+        },
+        {
+            "Position": {
+                "x": -2,
+                "y": 3,
+                "z": 0
+            },
+            "TileName": "racetrackStraightHorizontal_128x128"
+        },
+        {
+            "Position": {
+                "x": -1,
+                "y": 3,
+                "z": 0
+            },
+            "TileName": "racetrackStraightHorizontal_128x128"
+        },
+        {
+            "Position": {
+                "x": 0,
+                "y": 3,
+                "z": 0
+            },
+            "TileName": "racetrackStraightHorizontal_128x128"
+        },
+        {
+            "Position": {
+                "x": 1,
+                "y": 3,
+                "z": 0
+            },
+            "TileName": "racetrackStraightHorizontal_128x128"
+        },
+        {
+            "Position": {
+                "x": 2,
+                "y": 3,
+                "z": 0
+            },
+            "TileName": "racetrackStraightHorizontal_128x128"
+        },
+        {
+            "Position": {
+                "x": 3,
+                "y": 3,
+                "z": 0
+            },
+            "TileName": "racetrackStraightHorizontal_128x128"
+        },
+        {
+            "Position": {
+                "x": 4,
+                "y": 3,
+                "z": 0
+            },
+            "TileName": "racetrackCurveRightToDown1_128x128"
+        },
+        {
+            "Position": {
+                "x": 5,
+                "y": 3,
+                "z": 0
+            },
+            "TileName": "racetrackCurveUpToRight3_128x128"
+        },
+        {
+            "Position": {
+                "x": 6,
+                "y": 3,
+                "z": 0
+            },
+            "TileName": "racetrackStraightHorizontal_128x128"
+        },
+        {
+            "Position": {
+                "x": 7,
+                "y": 3,
+                "z": 0
+            },
+            "TileName": "racetrackStraightHorizontal_128x128"
+        },
+        {
+            "Position": {
+                "x": 8,
+                "y": 3,
+                "z": 0
+            },
+            "TileName": "racetrackCurveRightToDown1_128x128"
+        },
+        {
+            "Position": {
+                "x": 9,
+                "y": 3,
+                "z": 0
+            },
+            "TileName": "racetrackCurveRightToDown2_128x128"
+        }
+    ],
+    "UnitTiles": []
+}
