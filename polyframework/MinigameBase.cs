@@ -341,7 +341,7 @@ namespace Minigame_Base
                     ChannelKeyboardInput();
 
                     // Detect gamepad Two-Four on server and put in inputStates[1]-[3] ()
-                    // to intputStates[1]-[3] (input of clients)
+                    // to inputStates[1]-[3] (input of clients)
                     ChannelGamePadInput();
                 }
             }
